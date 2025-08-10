@@ -6,7 +6,8 @@ const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
 document.getElementById("year").textContent = new Date().getFullYear();
 
 /* Header badge */
-const cacBadge = document.getElementById("cac-badge");
+const cacBadgeWrap = document.getElementById("cac-badge");
+const cacText = document.getElementById("cac-text");
 
 /* Month labels */
 const dashMonthEl = document.getElementById("dash-month");
@@ -17,8 +18,8 @@ const dashMonthMaid = document.getElementById("dash-month-maid");
 const paidCountEl = document.getElementById("paid-count");
 const pendingCountEl = document.getElementById("pending-count");
 const tbodyMaint = document.getElementById("apt-table-maint");
-const cardPaid = document.getElementById("card-paid");
-const cardPending = document.getElementById("card-pending");
+const btnPaid = document.getElementById("btn-paid");
+const btnPending = document.getElementById("btn-pending");
 
 /* EB */
 const ebAmountEl = document.getElementById("eb-amount");
@@ -31,9 +32,9 @@ const maidAmountEl = document.getElementById("maid-amount");
 const maidLeavesEl = document.getElementById("maid-leaves");
 const maidPaidEl = document.getElementById("maid-paid");
 
-/* Lift (expiry-colored) */
-const insCard = document.getElementById("lift-ins-card");
-const amcCard = document.getElementById("lift-amc-card");
+/* Lift */
+const rowIns = document.getElementById("row-ins");
+const rowAmc = document.getElementById("row-amc");
 const liftInsPaidEl = document.getElementById("lift-ins-paid");
 const liftInsValidEl = document.getElementById("lift-ins-valid");
 const liftInsDaysEl  = document.getElementById("lift-ins-days");
@@ -47,27 +48,12 @@ const oplClosedCountEl = document.getElementById("opl-closed-count");
 const oplTableBody = document.getElementById("opl-table");
 const oplMoreBtn = document.getElementById("opl-more");
 
-/* Balance & Expenses */
-const cardBalance = document.getElementById("card-balance");
-const balAvailableEl = document.getElementById("bal-available");
-const balTotalEl = document.getElementById("bal-total");
-const balExpensesEl = document.getElementById("bal-expenses");
-const balTotalInlineEl = document.getElementById("bal-total-inline");
-const balExpensesInlineEl = document.getElementById("bal-expenses-inline");
-
 /* Modal */
 const modal = document.getElementById("modal");
 const modalClose = document.getElementById("modal-close");
 const modalX = document.getElementById("modal-x");
 const modalTitle = document.getElementById("modal-title");
 const modalContent = document.getElementById("modal-content");
-
-/* Global cache for transactions so click works even before data refresh */
-let gTransactions = [];
-
-/* Utils */
-function ym(d=new Date()){ return d.toISOString().slice(0,7); } // YYYY-MM
-function prettyMonth(ymStr){ const [Y,M]=ymStr.split("-"); return new Date(+Y, +M-1, 1).toLocaleString(undefined,{month:"long", year:"numeric"}); }
 
 function openModalHTML(title, html){
   modalTitle.textContent = title;
@@ -96,83 +82,61 @@ function daysUntil(dateString){
   const ms = d.setHours(0,0,0,0) - new Date().setHours(0,0,0,0);
   return Math.floor(ms / 86400000);
 }
-function setExpiryClass(tileEl, days){
-  tileEl.classList.remove("tile--ok","tile--warn","tile--bad");
+function setStatusColor(el, days){
+  el.classList.remove("ok","warn","bad");
   if (days === null) return;
-  if (days < 0) tileEl.classList.add("tile--bad");
-  else if (days <= 40) tileEl.classList.add("tile--warn");
-  else tileEl.classList.add("tile--ok");
+  if (days < 0) el.classList.add("bad");
+  else if (days <= 40) el.classList.add("warn");
+  else el.classList.add("ok");
 }
 
-/* EB windows: starting 15.09.2025–22.09.2025, then +2 months; show only the next period >= today */
-function ddmmyyyy(d){
-  const dd = String(d.getDate()).padStart(2,"0");
-  const mm = String(d.getMonth()+1).padStart(2,"0");
-  const yyyy = d.getFullYear();
-  return `${dd}.${mm}.${yyyy}`;
-}
-function addMonths(date, n){
-  const d = new Date(date.getTime());
-  d.setMonth(d.getMonth()+n);
-  return d;
-}
+/* EB window: starting 15.09.2025–22.09.2025, then +2 months; show next >= today */
+function ddmmyyyy(d){ return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}.${d.getFullYear()}`; }
+function addMonths(date, n){ const d=new Date(date.getTime()); d.setMonth(d.getMonth()+n); return d; }
 function nextEbWindow(){
-  const baseStart = new Date(2025,8,15); // Sep=8
+  const baseStart = new Date(2025,8,15); // Sep
   const baseEnd   = new Date(2025,8,22);
   const today = new Date();
-  let i = 0, s = baseStart, e = baseEnd;
+  let i=0, s=baseStart, e=baseEnd;
   while (e < today && i < 100){ i++; s = addMonths(baseStart, i*2); e = addMonths(baseEnd, i*2); }
   return `${ddmmyyyy(s)} ➜ ${ddmmyyyy(e)}`;
 }
 
-/* Transactions click (always wired) */
-cardBalance.addEventListener("click", ()=>{
-  if (!gTransactions.length){
-    openModalHTML("Transactions — Balance_Expenses", "<p class='small muted'>No transactions found.</p>");
-    return;
-  }
-  let html = `<div class="table-wrap"><table><thead><tr>
-    <th>Date</th><th>Remarks</th><th>Expenses</th><th>Balance</th><th>Responsible</th>
-  </tr></thead><tbody>`;
-  gTransactions.forEach(r=>{
-    html += `<tr>
-      <td>${r.date ?? ""}</td>
-      <td>${r.remarks ?? ""}</td>
-      <td>${r.expenses ?? 0}</td>
-      <td>${r.balance ?? 0}</td>
-      <td>${r.responsible ?? ""}</td>
-    </tr>`;
-  });
-  html += `</tbody></table></div>`;
-  openModalHTML("Transactions — Balance_Expenses", html);
-});
-
 async function loadDashboard(){
-  const month = ym();
-  dashMonthEl.textContent   = prettyMonth(month);
-  dashMonthEB.textContent   = prettyMonth(month);
-  dashMonthMaid.textContent = prettyMonth(month);
+  const month = new Date().toISOString().slice(0,7);
+  const monthLabel = new Date(month + "-01").toLocaleString(undefined,{month:"long", year:"numeric"});
+  dashMonthEl.textContent = monthLabel;
+  dashMonthEB.textContent = monthLabel;
+  dashMonthMaid.textContent = monthLabel;
 
   try{
     const res = await fetch(`${GAS_BASE_URL}?month=${month}&_=${Date.now()}`, { method:"GET", cache:"no-store" });
     const data = await res.json();
 
-    /* ===== Paid/Pending counts (also drive modal lists) ===== */
+    /* Common Area Controller (header, top-right) */
+    let cac = "—";
+    if (Array.isArray(data.opl)){
+      for (let i=data.opl.length-1; i>=0; i--){
+        const r = data.opl[i];
+        const t = String(r.title||"").toLowerCase();
+        const rem = String(r.remarks||"").toLowerCase();
+        if (t.includes("common area controller") || rem.includes("common area controller")){
+          cac = r.apartment || r.remarks || r.title; break;
+        }
+      }
+    }
+    cacText.textContent = `Common Area Controller: ${cac}`;
+
+    /* Maintenance paid/pending + table */
     const payments = Array.isArray(data.payments) ? data.payments : [];
-    const paidFlatsArr = payments.filter(p=>p.maintPaid).map(p=> String(p.apartment||"").trim());
-    const paidFlats = new Set(paidFlatsArr);
-    const pendingFlats = APTS.filter(a => !paidFlats.has(a));
+    const paidSet = new Set(payments.filter(p=>p.maintPaid).map(p=>String(p.apartment||"").trim()));
+    const pending = APTS.filter(a => !paidSet.has(a));
 
-    paidCountEl.textContent = String(paidFlats.size);
-    pendingCountEl.textContent = String(pendingFlats.length);
+    paidCountEl.textContent = String(paidSet.size);
+    pendingCountEl.textContent = String(pending.length);
 
-    cardPaid.onclick    = ()=> {
-      const list = Array.from(paidFlats).sort();
-      openModalHTML("Flats Paid", `<ul id="modal-list">${list.map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
-    };
-    cardPending.onclick = ()=> {
-      openModalHTML("Flats Pending (Due)", `<ul id="modal-list">${pendingFlats.map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
-    };
+    btnPaid.onclick = ()=> openModalHTML("Flats Paid", `<ul id="modal-list">${Array.from(paidSet).sort().map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
+    btnPending.onclick = ()=> openModalHTML("Flats Pending (Due)", `<ul id="modal-list">${pending.map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
 
     if (tbodyMaint){
       tbodyMaint.innerHTML = "";
@@ -188,7 +152,7 @@ async function loadDashboard(){
       });
     }
 
-    /* ===== EB ===== */
+    /* EB */
     const eb = data.eb || {};
     if (typeof eb.amountCommon === "number"){ ebAmountEl.textContent = `${eb.amountCommon}`; ebAmountNoteEl.textContent = ""; }
     else if (eb.note){ ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = eb.note; }
@@ -200,43 +164,29 @@ async function loadDashboard(){
     }
     const allEbPaid = payments.length ? payments.every(p=>p.ebPaid) : false;
     ebPaidEl.textContent = allEbPaid ? "All Paid" : "Pending Exists";
-    ebNextEl.textContent = nextEbWindow(); // only one period
+    ebNextEl.textContent = nextEbWindow();
 
-    /* ===== Common Area Controller in header ===== */
-    let cac = null;
-    if (Array.isArray(data.opl)){
-      for (let i=data.opl.length-1; i>=0; i--){
-        const r = data.opl[i];
-        const t = String(r.title||"").toLowerCase();
-        const rem = String(r.remarks||"").toLowerCase();
-        if (t.includes("common area controller") || rem.includes("common area controller")){
-          cac = r.apartment || r.remarks || r.title; break;
-        }
-      }
-    }
-    cacBadge.textContent = `Common Area Controller: ${cac ? String(cac) : "—"}`;
-
-    /* ===== Maid ===== */
+    /* Maid */
     maidAmountEl.textContent = (data.maid && typeof data.maid.amountThisMonth === "number") ? `${data.maid.amountThisMonth}` : "—";
     maidLeavesEl.textContent = data.maid?.leavesThisMonth ?? "0";
     maidPaidEl.textContent   = data.maid?.paidThisMonth ? "Paid" : "Not Paid";
 
-    /* ===== Lift (expiry color) ===== */
+    /* Lift with expiry colors */
     if (data.lift){
       const insDays = daysUntil(data.lift.insurance?.validUntil);
       liftInsPaidEl.textContent  = data.lift.insurance?.paid ? "Paid" : "Not Paid";
       liftInsValidEl.textContent = data.lift.insurance?.validUntil || "—";
       liftInsDaysEl.textContent  = (insDays===null) ? "" : (insDays < 0 ? `${Math.abs(insDays)} days overdue` : `${insDays} days left`);
-      setExpiryClass(insCard, insDays);
+      setStatusColor(rowIns, insDays);
 
       const amcDays = daysUntil(data.lift.amc?.validUntil);
       liftAmcPaidEl.textContent  = data.lift.amc?.paid ? "Paid" : "Not Paid";
       liftAmcValidEl.textContent = data.lift.amc?.validUntil || "—";
       liftAmcDaysEl.textContent  = (amcDays===null) ? "" : (amcDays < 0 ? `${Math.abs(amcDays)} days overdue` : `${amcDays} days left`);
-      setExpiryClass(amcCard, amcDays);
+      setStatusColor(rowAmc, amcDays);
     }
 
-    /* ===== OPL ===== */
+    /* OPL */
     const opl = Array.isArray(data.opl) ? data.opl : [];
     const openItems = opl.filter(x => (String(x.status||"").toLowerCase() !== "closed"));
     const closedItems = opl.filter(x => (String(x.status||"").toLowerCase() === "closed"));
@@ -255,7 +205,7 @@ async function loadDashboard(){
       `;
       oplTableBody.appendChild(tr);
     });
-    document.getElementById("opl-more").onclick = ()=>{
+    oplMoreBtn.onclick = ()=>{
       const rows = [...openItems, ...closedItems];
       if (!rows.length){ openModalHTML("OPL — Full List", "<p class='small muted'>No items.</p>"); return; }
       let html = `<div class="table-wrap"><table><thead><tr>
@@ -275,19 +225,14 @@ async function loadDashboard(){
       openModalHTML("OPL — Full List", html);
     };
 
-    /* ===== Balance & Expenses ===== */
+    /* Balance (single row) */
     const bal = data.balance || {};
     const total = Number(bal.totalBalance||0);
     const exp   = Number(bal.totalExpenses||0);
     const avail = Number(bal.available|| (total - exp));
-
-    balTotalEl.textContent = `${total}`;
-    balExpensesEl.textContent = `${exp}`;
-    balAvailableEl.textContent = `${avail}`;
-    balTotalInlineEl.textContent = `${total}`;
-    balExpensesInlineEl.textContent = `${exp}`;
-
-    gTransactions = Array.isArray(bal.list) ? bal.list : [];
+    document.getElementById("bal-available").textContent = `${avail}`;
+    document.getElementById("bal-total-inline").textContent = `${total}`;
+    document.getElementById("bal-expenses-inline").textContent = `${exp}`;
 
   }catch(err){
     console.error("Dashboard fetch failed:", err);
