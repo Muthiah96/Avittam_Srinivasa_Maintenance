@@ -10,6 +10,9 @@
   <header class="hero">
     <div class="stripe"></div>
     <h1>Avittam Srinivase Apartment Portal</h1>
+    <div class="header-badges">
+      <span id="cac-badge" class="badge">Common Area Controller: —</span>
+    </div>
   </header>
 
   <!-- Compact colored nav -->
@@ -18,7 +21,7 @@
     <a href="#opl">OPL</a>
   </nav>
 
-  <!-- DASHBOARD (compact tile grid) -->
+  <!-- DASHBOARD -->
   <section class="container panel" id="dashboard">
     <h2>Dashboard — <span id="dash-month"></span></h2>
 
@@ -26,12 +29,12 @@
       <!-- Maintenance -->
       <button class="card clickable" type="button" id="card-paid">
         <h3>Paid (Flats)</h3>
-        <p class="big" id="paid-count">—</p>
+        <p class="big" id="paid-count">0</p>
         <p class="small muted">Tap to see who paid</p>
       </button>
       <button class="card clickable warn" type="button" id="card-pending">
         <h3>Pending (Flats)</h3>
-        <p class="big" id="pending-count">—</p>
+        <p class="big" id="pending-count">0</p>
         <p class="small muted">Tap to see who’s due</p>
       </button>
 
@@ -47,15 +50,8 @@
         <p class="small muted">Month: <span id="dash-month-eb"></span></p>
       </div>
       <div class="card" id="eb-periods-card">
-        <h3>Next EB Periods</h3>
-        <ul id="eb-periods" class="list"></ul>
-      </div>
-
-      <!-- Common Area Controller (from OPL.Apt) -->
-      <div class="card">
-        <h3>Common Area Controller</h3>
-        <p class="big" id="cac-value">—</p>
-        <p class="small muted">From OPL (Apt)</p>
+        <h3>Next EB Period</h3>
+        <p class="big" id="eb-next">—</p>
       </div>
 
       <!-- Maid -->
@@ -94,6 +90,7 @@
       <button class="card accent clickable" type="button" id="card-balance">
         <h3>Available Balance</h3>
         <p class="big" id="bal-available">—</p>
+        <p class="small muted">Total: <span id="bal-total-inline">—</span> • Expenses: <span id="bal-expenses-inline">—</span></p>
         <p class="small muted">Tap to view transactions</p>
       </button>
       <div class="card">
@@ -106,7 +103,7 @@
       </div>
     </div>
 
-    <!-- Maintenance details (collapsible to keep page short) -->
+    <!-- Maintenance details (collapsible) -->
     <details class="details">
       <summary>Maintenance details (per flat)</summary>
       <div class="table-wrap">
@@ -161,7 +158,7 @@
     <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
   </footer>
 
-  <!-- Modal (lists & tables) -->
+  <!-- Modal -->
   <div id="modal" class="modal hidden" aria-hidden="true">
     <div class="modal-backdrop" id="modal-close"></div>
     <div class="modal-card">
@@ -173,6 +170,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=20"></script>
+  <script src="script.js?v=22"></script>
 </body>
 </html>
