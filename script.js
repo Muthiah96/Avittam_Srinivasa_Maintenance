@@ -5,14 +5,13 @@ const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZv
 const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
 document.getElementById("year").textContent = new Date().getFullYear();
 
-/* Header badge */
-const cacBadgeWrap = document.getElementById("cac-badge");
-const cacText = document.getElementById("cac-text");
-
 /* Month labels */
 const dashMonthEl = document.getElementById("dash-month");
 const dashMonthEB = document.getElementById("dash-month-eb");
 const dashMonthMaid = document.getElementById("dash-month-maid");
+
+/* CAC pill */
+const cacText = document.getElementById("cac-text");
 
 /* Maintenance */
 const paidCountEl = document.getElementById("paid-count");
@@ -27,7 +26,7 @@ const ebAmountNoteEl = document.getElementById("eb-amount-note");
 const ebPaidEl = document.getElementById("eb-paid");
 const ebNextEl = document.getElementById("eb-next");
 
-/* Maid */
+/* Sweeper (maid IDs kept) */
 const maidAmountEl = document.getElementById("maid-amount");
 const maidLeavesEl = document.getElementById("maid-leaves");
 const maidPaidEl = document.getElementById("maid-paid");
@@ -62,8 +61,8 @@ function openModalHTML(title, html){
   modal.setAttribute("aria-hidden","false");
 }
 function closeModal(){ modal.classList.add("hidden"); modal.setAttribute("aria-hidden","true"); }
-modalClose.addEventListener("click", closeModal);
-modalX.addEventListener("click", closeModal);
+if (modalClose) modalClose.addEventListener("click", closeModal);
+if (modalX) modalX.addEventListener("click", closeModal);
 document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeModal(); });
 
 /* Date helpers */
@@ -90,7 +89,7 @@ function setStatusColor(el, days){
   else el.classList.add("ok");
 }
 
-/* EB window: starting 15.09.2025–22.09.2025, then +2 months; show next >= today */
+/* EB window: 15.09.2025–22.09.2025, then +2 months; show next >= today */
 function ddmmyyyy(d){ return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}.${d.getFullYear()}`; }
 function addMonths(date, n){ const d=new Date(date.getTime()); d.setMonth(d.getMonth()+n); return d; }
 function nextEbWindow(){
@@ -106,14 +105,14 @@ async function loadDashboard(){
   const month = new Date().toISOString().slice(0,7);
   const monthLabel = new Date(month + "-01").toLocaleString(undefined,{month:"long", year:"numeric"});
   dashMonthEl.textContent = monthLabel;
-  dashMonthEB.textContent = monthLabel;
-  dashMonthMaid.textContent = monthLabel;
+  if (dashMonthEB) dashMonthEB.textContent = monthLabel;
+  if (dashMonthMaid) dashMonthMaid.textContent = monthLabel;
 
   try{
     const res = await fetch(`${GAS_BASE_URL}?month=${month}&_=${Date.now()}`, { method:"GET", cache:"no-store" });
     const data = await res.json();
 
-    /* Common Area Controller (header, top-right) */
+    /* CAC pill */
     let cac = "—";
     if (Array.isArray(data.opl)){
       for (let i=data.opl.length-1; i>=0; i--){
@@ -127,7 +126,7 @@ async function loadDashboard(){
     }
     cacText.textContent = `Common Area Controller: ${cac}`;
 
-    /* Maintenance paid/pending + table */
+    /* Maintenance */
     const payments = Array.isArray(data.payments) ? data.payments : [];
     const paidSet = new Set(payments.filter(p=>p.maintPaid).map(p=>String(p.apartment||"").trim()));
     const pending = APTS.filter(a => !paidSet.has(a));
@@ -166,12 +165,12 @@ async function loadDashboard(){
     ebPaidEl.textContent = allEbPaid ? "All Paid" : "Pending Exists";
     ebNextEl.textContent = nextEbWindow();
 
-    /* Maid */
+    /* Sweeper */
     maidAmountEl.textContent = (data.maid && typeof data.maid.amountThisMonth === "number") ? `${data.maid.amountThisMonth}` : "—";
     maidLeavesEl.textContent = data.maid?.leavesThisMonth ?? "0";
     maidPaidEl.textContent   = data.maid?.paidThisMonth ? "Paid" : "Not Paid";
 
-    /* Lift with expiry colors */
+    /* Lift */
     if (data.lift){
       const insDays = daysUntil(data.lift.insurance?.validUntil);
       liftInsPaidEl.textContent  = data.lift.insurance?.paid ? "Paid" : "Not Paid";
@@ -225,7 +224,7 @@ async function loadDashboard(){
       openModalHTML("OPL — Full List", html);
     };
 
-    /* Balance (single row) */
+    /* Balance */
     const bal = data.balance || {};
     const total = Number(bal.totalBalance||0);
     const exp   = Number(bal.totalExpenses||0);
