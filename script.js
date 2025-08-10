@@ -1,5 +1,5 @@
 /* ====== CONFIG: paste your Apps Script web app URL here ====== */
-const GAS_BASE_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL"; // e.g. https://script.google.com/macros/s/AKfycb.../exec
+const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec"; // e.g. https://script.google.com/macros/s/AKfycb.../exec
 /* ============================================================= */
 
 const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
