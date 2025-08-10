@@ -84,16 +84,16 @@ document.getElementById("req-form").addEventListener("submit", async (e) => {
   msg.textContent = "Submitting...";
 
   const form = e.target;
-  const fd = new FormData(form);
+  const fd = new FormData(form);        // multipart/form-data (allowed content-type)
   fd.append("timestamp", new Date().toISOString());
 
   try {
     const res = await fetch(GAS_BASE_URL, {
       method: "POST",
-      body: fd   // <- no headers, no JSON => no preflight
+      body: fd              // <-- NO headers here (do NOT set Content-Type)
     });
 
-    // Apps Script returns JSON string; still ok to parse:
+    // If your Apps Script returns JSON
     const out = await res.json().catch(() => ({}));
     if (out && out.success) {
       msg.textContent = "Request submitted. You will receive updates via email.";
@@ -108,3 +108,4 @@ document.getElementById("req-form").addEventListener("submit", async (e) => {
 });
 
 loadDashboard();
+
