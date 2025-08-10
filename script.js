@@ -82,21 +82,22 @@ document.getElementById("req-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const msg = document.getElementById("form-msg");
   msg.textContent = "Submitting...";
-  const formData = new FormData(e.target);
-  const payload = Object.fromEntries(formData.entries());
-  payload.timestamp = new Date().toISOString();
+
+  const form = e.target;
+  const fd = new FormData(form);
+  fd.append("timestamp", new Date().toISOString());
 
   try {
     const res = await fetch(GAS_BASE_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: fd   // <- no headers, no JSON => no preflight
     });
-    if (!res.ok) throw new Error("Network error");
-    const out = await res.json();
-    if (out.success) {
+
+    // Apps Script returns JSON string; still ok to parse:
+    const out = await res.json().catch(() => ({}));
+    if (out && out.success) {
       msg.textContent = "Request submitted. You will receive updates via email.";
-      e.target.reset();
+      form.reset();
     } else {
       msg.textContent = "Submission failed. Please try again.";
     }
