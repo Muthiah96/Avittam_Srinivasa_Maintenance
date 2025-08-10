@@ -2,7 +2,7 @@
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec";
 /* ==================== */
 
-const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"]; // for maintenance counts & table
+const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"]; // used for counts and pending lists
 const yearEl = document.getElementById("year"); yearEl.textContent = new Date().getFullYear();
 
 /* Maintenance */
@@ -19,7 +19,7 @@ const ebPaidEl = document.getElementById("eb-paid");
 
 /* Maid */
 const dashMonthMaid = document.getElementById("dash-month-maid");
-const maidTodayEl = document.getElementById("maid-today");
+const maidAmountEl = document.getElementById("maid-amount");
 const maidLeavesEl = document.getElementById("maid-leaves");
 const maidPaidEl = document.getElementById("maid-paid");
 
@@ -34,16 +34,43 @@ const oplOpenCountEl = document.getElementById("opl-open-count");
 const oplClosedCountEl = document.getElementById("opl-closed-count");
 const oplTableBody = document.getElementById("opl-table");
 
-/* History */
-const historyTableBody = document.getElementById("history-table");
+/* Modal */
+const modal = document.getElementById("modal");
+const modalClose = document.getElementById("modal-close");
+const modalX = document.getElementById("modal-x");
+const modalTitle = document.getElementById("modal-title");
+const modalList = document.getElementById("modal-list");
 
 function ym(d = new Date()){ return d.toISOString().slice(0,7); } // YYYY-MM
 function prettyMonth(ymStr){ const [Y,M] = ymStr.split("-"); return new Date(+Y, +M-1, 1).toLocaleString(undefined,{month:"long", year:"numeric"}); }
 
+function openModal(title, items){
+  modalTitle.textContent = title;
+  modalList.innerHTML = "";
+  if (!items || items.length === 0){
+    const li = document.createElement("li");
+    li.textContent = "None";
+    modalList.appendChild(li);
+  } else {
+    items.forEach(x => {
+      const li = document.createElement("li"); li.textContent = x; modalList.appendChild(li);
+    });
+  }
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+}
+function closeModal(){
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden","true");
+}
+modalClose.addEventListener("click", closeModal);
+modalX.addEventListener("click", closeModal);
+document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeModal(); });
+
 async function loadDashboard(){
   const month = ym();
-  dashMonthEl.textContent = prettyMonth(month);
-  dashMonthEB.textContent = prettyMonth(month);
+  dashMonthEl.textContent   = prettyMonth(month);
+  dashMonthEB.textContent   = prettyMonth(month);
   dashMonthMaid.textContent = prettyMonth(month);
 
   try{
@@ -53,12 +80,19 @@ async function loadDashboard(){
     console.log("Dashboard data:", data);
 
     /* ===== Maintenance ===== */
-    const paidCount = data?.maintenance?.paidCount ?? ((data.payments||[]).filter(p=>p.maintPaid).length);
-    paidCountEl.textContent = paidCount.toString();
-    const pending = Math.max(0, APTS.length - paidCount);
-    pendingCountEl.textContent = pending.toString();
+    const paidFlats = new Set((data.payments||[]).filter(p=>p.maintPaid).map(p=>p.apartment));
+    const paidCount = paidFlats.size;
+    const pendingFlats = APTS.filter(a => !paidFlats.has(a));
+    const pendingCount = pendingFlats.length;
 
-    // Per-apt maintenance table (kept)
+    paidCountEl.textContent = String(paidCount);
+    pendingCountEl.textContent = String(pendingCount);
+
+    // click behavior
+    document.getElementById("card-paid").onclick    = ()=> openModal("Flats Paid", Array.from(paidFlats).sort());
+    document.getElementById("card-pending").onclick = ()=> openModal("Flats Pending (Due)", pendingFlats);
+
+    // per-apt maintenance table (kept)
     tbodyMaint.innerHTML = "";
     APTS.forEach(apt => {
       const row = (data.payments||[]).find(p => p.apartment === apt) || {};
@@ -80,7 +114,6 @@ async function loadDashboard(){
       ebAmountEl.textContent = "—";
       ebAmountNoteEl.textContent = eb.note;
     } else {
-      // derive from payments if backend older
       const unique = Array.from(new Set((data.payments||[]).map(p => Number(p.ebAmount)||0).filter(v=>v>0)));
       if (unique.length === 1){ ebAmountEl.textContent = `${unique[0]}`; ebAmountNoteEl.textContent = ""; }
       else if (unique.length > 1){ ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = "Varies by flat; set a single common amount."; }
@@ -92,12 +125,13 @@ async function loadDashboard(){
     ebPaidEl.textContent = allEbPaid ? "All Paid" : "Pending Exists";
 
     /* ===== Maid ===== */
-    maidTodayEl.textContent = (data.maid?.todayCame === true) ? "Came"
-                              : (data.maid?.todayCame === false) ? "Not Came" : "—";
+    maidAmountEl.textContent = (data.maid && typeof data.maid.amountThisMonth === "number")
+      ? `${data.maid.amountThisMonth}`
+      : "—";
     maidLeavesEl.textContent = data.maid?.leavesThisMonth ?? "0";
-    maidPaidEl.textContent = data.maid?.paidThisMonth ? "Paid" : "Not Paid";
+    maidPaidEl.textContent   = data.maid?.paidThisMonth ? "Paid" : "Not Paid";
 
-    /* ===== Lift Details (Insurance + AMC) ===== */
+    /* ===== Lift Details ===== */
     if (data.lift){
       liftInsPaidEl.textContent  = data.lift.insurance?.paid ? "Paid" : "Not Paid";
       liftInsValidEl.textContent = data.lift.insurance?.validUntil || "—";
@@ -112,8 +146,8 @@ async function loadDashboard(){
     const opl = Array.isArray(data.opl) ? data.opl : [];
     const openItems = opl.filter(x => (String(x.status||"").toLowerCase() !== "closed"));
     const closedItems = opl.filter(x => (String(x.status||"").toLowerCase() === "closed"));
-    oplOpenCountEl.textContent = openItems.length.toString();
-    oplClosedCountEl.textContent = closedItems.length.toString();
+    oplOpenCountEl.textContent = String(openItems.length);
+    oplClosedCountEl.textContent = String(closedItems.length);
 
     oplTableBody.innerHTML = "";
     [...openItems, ...closedItems].forEach(item => {
@@ -129,35 +163,19 @@ async function loadDashboard(){
       oplTableBody.appendChild(tr);
     });
 
-    /* ===== History ===== */
-    const history = Array.isArray(data.history) ? data.history : [];
-    historyTableBody.innerHTML = "";
-    history.forEach(h => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${h.date ?? ""}</td>
-        <td>${h.event ?? h.type ?? ""}</td>
-        <td>${h.details ?? ""}</td>
-        <td>${h.by ?? ""}</td>
-      `;
-      historyTableBody.appendChild(tr);
-    });
-
   }catch(err){
     console.error("Dashboard fetch failed:", err);
   }
 }
 
-/* Form submit stays same (POST as FormData to avoid CORS preflight) */
+/* (Form submit kept as before – if you still have the form on the page) */
 document.getElementById("req-form")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const msg = document.getElementById("form-msg");
   msg.textContent = "Submitting...";
-
   const form = e.target;
   const fd = new FormData(form);
   fd.append("timestamp", new Date().toISOString());
-
   try{
     const res = await fetch(GAS_BASE_URL, { method:"POST", body: fd });
     const out = await res.json().catch(()=>({}));

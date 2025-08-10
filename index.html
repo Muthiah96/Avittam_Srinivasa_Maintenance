@@ -10,31 +10,32 @@
   <header class="hero">
     <div class="stripe"></div>
     <h1>🏢 Avittam Srinivase Apartment Maintenance Portal</h1>
-    <p>Track maintenance, EB, maid status, lift details, OPL & history</p>
+    <p>Track maintenance, EB, maid status, lift details & OPL</p>
   </header>
 
-  <!-- Top Nav -->
+  <!-- Colored Top Nav -->
   <nav class="topnav">
     <a href="#maintenance">Maintenance</a>
     <a href="#eb">EB</a>
     <a href="#maid">Maid</a>
     <a href="#lift">Lift Details</a>
     <a href="#opl">OPL</a>
-    <a href="#history">History</a>
   </nav>
 
   <!-- MAINTENANCE -->
   <section class="container panel" id="maintenance">
     <h2>Maintenance — <span id="dash-month"></span></h2>
     <div class="cards">
-      <div class="card accent">
+      <button class="card accent clickable" id="card-paid">
         <h3>Paid (Flats)</h3>
         <p class="big" id="paid-count">—</p>
-      </div>
-      <div class="card warn">
+        <p class="small muted">Click to view which flats paid</p>
+      </button>
+      <button class="card warn clickable" id="card-pending">
         <h3>Pending (Flats)</h3>
         <p class="big" id="pending-count">—</p>
-      </div>
+        <p class="small muted">Click to view who’s due</p>
+      </button>
     </div>
 
     <div class="table-wrap">
@@ -72,8 +73,8 @@
     <h2>Maid — <span id="dash-month-maid"></span></h2>
     <div class="cards">
       <div class="card">
-        <h3>Maid Today</h3>
-        <p class="big" id="maid-today">—</p>
+        <h3>Maid Amount (This Month)</h3>
+        <p class="big" id="maid-amount">—</p>
       </div>
       <div class="card">
         <h3>Leaves (This Month)</h3>
@@ -138,28 +139,20 @@
     </div>
   </section>
 
-  <!-- HISTORY -->
-  <section class="container panel" id="history">
-    <h2>History</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Event</th>
-            <th>Details</th>
-            <th>By</th>
-          </tr>
-        </thead>
-        <tbody id="history-table"></tbody>
-      </table>
-    </div>
-  </section>
-
   <footer>
     <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
   </footer>
 
-  <script src="script.js?v=12"></script>
+  <!-- Modal for Paid/Pending lists -->
+  <div id="modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" id="modal-close"></div>
+    <div class="modal-card">
+      <button class="modal-x" id="modal-x" aria-label="Close">×</button>
+      <h3 id="modal-title">Details</h3>
+      <ul id="modal-list"></ul>
+    </div>
+  </div>
+
+  <script src="script.js?v=14"></script>
 </body>
 </html>
