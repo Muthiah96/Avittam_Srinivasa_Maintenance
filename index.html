@@ -10,7 +10,7 @@
   <header class="hero">
     <div class="stripe"></div>
     <h1>🏢 Avittam Srinivase Apartment Maintenance Portal</h1>
-    <p>Track maintenance, EB, maid status, lift details & OPL</p>
+    <!-- removed subtext per request -->
   </header>
 
   <!-- Colored Top Nav -->
@@ -20,6 +20,7 @@
     <a href="#maid">Maid</a>
     <a href="#lift">Lift Details</a>
     <a href="#opl">OPL</a>
+    <a href="#balance">Balance & Expenses</a>
   </nav>
 
   <!-- MAINTENANCE -->
@@ -128,14 +129,32 @@
           <tr>
             <th>ID</th>
             <th>Title / Issue</th>
-            <th>Apt</th>
             <th>Status</th>
-            <th>Owner</th>
-            <th>Due</th>
+            <th>Apt</th>
+            <th>Remarks</th>
           </tr>
         </thead>
         <tbody id="opl-table"></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- BALANCE & EXPENSES -->
+  <section class="container panel" id="balance">
+    <h2>Balance & Expenses</h2>
+    <div class="cards">
+      <div class="card accent">
+        <h3>Available Balance</h3>
+        <p class="big" id="bal-available">—</p>
+      </div>
+      <div class="card">
+        <h3>Total Balance (Σ)</h3>
+        <p class="big" id="bal-total">—</p>
+      </div>
+      <div class="card">
+        <h3>Total Expenses (Σ)</h3>
+        <p class="big" id="bal-expenses">—</p>
+      </div>
     </div>
   </section>
 
@@ -153,6 +172,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=14"></script>
+  <script src="script.js?v=16"></script>
 </body>
 </html>
