@@ -1,126 +1,241 @@
-/* THEME (Orange-first) */
-:root{
-  --brand-a: #b45309;
-  --brand-b: #f59e0b;
-  --brand-c: #ffedd5;
-  --dark: #0f172a;
-  --mid:  #6c7a86;
-  --line: #e9edf3;
+/* ====== CONFIG ====== */
+const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec";
+/* ==================== */
 
-  --bg: #fffaf5;
-  --fg: #111827;
+const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
+document.getElementById("year").textContent = new Date().getFullYear();
 
-  --ok:   #10b981;
-  --warn: #f59e0b;
-  --bad:  #ef4444;
+/* Month labels */
+const dashMonthEl = document.getElementById("dash-month");
+const dashMonthEB = document.getElementById("dash-month-eb");
+const dashMonthMaid = document.getElementById("dash-month-maid");
 
-  --card: #ffffff;
+/* CAC pill text */
+const cacText = document.getElementById("cac-text");
+
+/* Maintenance */
+const paidCountEl = document.getElementById("paid-count");
+const pendingCountEl = document.getElementById("pending-count");
+const tbodyMaint = document.getElementById("apt-table-maint");
+const btnPaid = document.getElementById("btn-paid");
+const btnPending = document.getElementById("btn-pending");
+
+/* EB */
+const ebAmountEl = document.getElementById("eb-amount");
+const ebAmountNoteEl = document.getElementById("eb-amount-note");
+const ebPaidEl = document.getElementById("eb-paid");
+const ebNextEl = document.getElementById("eb-next");
+
+/* Sweeper (maid IDs kept) */
+const maidAmountEl = document.getElementById("maid-amount");
+const maidLeavesEl = document.getElementById("maid-leaves");
+const maidPaidEl = document.getElementById("maid-paid");
+
+/* Lift */
+const rowIns = document.getElementById("row-ins");
+const rowAmc = document.getElementById("row-amc");
+const liftInsPaidEl = document.getElementById("lift-ins-paid");
+const liftInsValidEl = document.getElementById("lift-ins-valid");
+const liftInsDaysEl  = document.getElementById("lift-ins-days");
+const liftAmcPaidEl  = document.getElementById("lift-amc-paid");
+const liftAmcValidEl = document.getElementById("lift-amc-valid");
+const liftAmcDaysEl  = document.getElementById("lift-amc-days");
+
+/* OPL */
+const oplOpenCountEl = document.getElementById("opl-open-count");
+const oplClosedCountEl = document.getElementById("opl-closed-count");
+const oplTableBody = document.getElementById("opl-table");
+const oplMoreBtn = document.getElementById("opl-more");
+
+/* Modal */
+const modal = document.getElementById("modal");
+const modalClose = document.getElementById("modal-close");
+const modalX = document.getElementById("modal-x");
+const modalTitle = document.getElementById("modal-title");
+const modalContent = document.getElementById("modal-content");
+
+function openModalHTML(title, html){
+  modalTitle.textContent = title;
+  modalContent.innerHTML = html;
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden","false");
+}
+function closeModal(){ modal.classList.add("hidden"); modal.setAttribute("aria-hidden","true"); }
+if (modalClose) modalClose.addEventListener("click", closeModal);
+if (modalX) modalX.addEventListener("click", closeModal);
+document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeModal(); });
+
+/* Date helpers */
+function parseDateFlexible(s){
+  if (!s) return null; if (s instanceof Date) return s;
+  const t=String(s).trim(), d1=new Date(t); if(!isNaN(d1)) return d1;
+  let m=t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+  if(m){ const d=new Date(+m[3], +m[2]-1, +m[1]); if(!isNaN(d)) return d; }
+  m=t.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
+  if(m){ const d=new Date(+m[1], +m[2]-1, +m[3]); if(!isNaN(d)) return d; }
+  return null;
+}
+function daysUntil(dateString){
+  const d = parseDateFlexible(dateString);
+  if (!d) return null;
+  const ms = d.setHours(0,0,0,0) - new Date().setHours(0,0,0,0);
+  return Math.floor(ms / 86400000);
+}
+function setStatusColor(el, days){
+  el.classList.remove("ok","warn","bad");
+  if (days === null) return;
+  if (days < 0) el.classList.add("bad");
+  else if (days <= 40) el.classList.add("warn");
+  else el.classList.add("ok");
 }
 
-*{box-sizing:border-box}
-html,body{ height:100% }
-body{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--fg); line-height:1.35 }
-
-/* Header */
-.hero{
-  background: linear-gradient(180deg, var(--brand-a), var(--brand-b));
-  color:#fff; padding:14px 12px 16px; text-align:center; position:relative;
-}
-.hero .stripe{ position:absolute; top:0; left:0; right:0; height:3px; background: linear-gradient(90deg, var(--brand-b), var(--brand-a)); }
-.hero h1{ margin:0; font-size:18px; letter-spacing:.2px; }
-
-/* NEW: Sub-header bar under the hero */
-.subhead{
-  display:flex; justify-content:center; padding:8px 12px;
-  background:#fff7ed; /* orange-50 */
-  border-bottom:1px solid var(--line);
-}
-.badge-icon{
-  display:inline-flex; align-items:center; gap:6px; padding:6px 10px;
-  background:#fff; color:var(--dark);
-  border:1px solid var(--line); border-radius:999px;
-  box-shadow:0 4px 10px rgba(191, 90, 0, .06);
+/* EB window: starting 15.09.2025–22.09.2025, then +2 months; show next >= today */
+function ddmmyyyy(d){ return `${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}.${d.getFullYear()}`; }
+function addMonths(date, n){ const d=new Date(date.getTime()); d.setMonth(d.getMonth()+n); return d; }
+function nextEbWindow(){
+  const baseStart = new Date(2025,8,15); // Sep
+  const baseEnd   = new Date(2025,8,22);
+  const today = new Date();
+  let i=0, s=baseStart, e=baseEnd;
+  while (e < today && i < 100){ i++; s = addMonths(baseStart, i*2); e = addMonths(baseEnd, i*2); }
+  return `${ddmmyyyy(s)} ➜ ${ddmmyyyy(e)}`;
 }
 
-/* Sticky nav */
-.topnav{
-  position:sticky; top:0; z-index:10;
-  background: linear-gradient(90deg, var(--brand-a), var(--brand-b));
-  display:flex; gap:8px; padding:8px 10px; overflow-x:auto;
-  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+async function loadDashboard(){
+  const month = new Date().toISOString().slice(0,7);
+  const monthLabel = new Date(month + "-01").toLocaleString(undefined,{month:"long", year:"numeric"});
+  dashMonthEl.textContent = monthLabel;
+  if (dashMonthEB) dashMonthEB.textContent = monthLabel;
+  if (dashMonthMaid) dashMonthMaid.textContent = monthLabel;
+
+  try{
+    const res = await fetch(`${GAS_BASE_URL}?month=${month}&_=${Date.now()}`, { method:"GET", cache:"no-store" });
+    const data = await res.json();
+
+    /* Common Area Controller: latest OPL item referencing it */
+    let cac = "—";
+    if (Array.isArray(data.opl)){
+      for (let i=data.opl.length-1; i>=0; i--){
+        const r = data.opl[i];
+        const t = String(r.title||"").toLowerCase();
+        const rem = String(r.remarks||"").toLowerCase();
+        if (t.includes("common area controller") || rem.includes("common area controller")){
+          cac = r.apartment || r.remarks || r.title; break;
+        }
+      }
+    }
+    cacText.textContent = `Common Area Controller: ${cac}`;
+
+    /* Maintenance */
+    const payments = Array.isArray(data.payments) ? data.payments : [];
+    const paidSet = new Set(payments.filter(p=>p.maintPaid).map(p=>String(p.apartment||"").trim()));
+    const pending = APTS.filter(a => !paidSet.has(a));
+
+    paidCountEl.textContent = String(paidSet.size);
+    pendingCountEl.textContent = String(pending.length);
+
+    btnPaid.onclick = ()=> openModalHTML("Flats Paid", `<ul id="modal-list">${Array.from(paidSet).sort().map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
+    btnPending.onclick = ()=> openModalHTML("Flats Pending (Due)", `<ul id="modal-list">${pending.map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
+
+    if (tbodyMaint){
+      tbodyMaint.innerHTML = "";
+      APTS.forEach(apt => {
+        const row = payments.find(p => String(p.apartment) === apt) || {};
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${apt}</td>
+          <td>${row.maintAmount ?? "-"}</td>
+          <td class="${row.maintPaid ? "ok" : "warn"}">${row.maintPaid ? "Yes" : "No"}</td>
+        `;
+        tbodyMaint.appendChild(tr);
+      });
+    }
+
+    /* EB */
+    const eb = data.eb || {};
+    if (typeof eb.amountCommon === "number"){ ebAmountEl.textContent = `${eb.amountCommon}`; ebAmountNoteEl.textContent = ""; }
+    else if (eb.note){ ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = eb.note; }
+    else {
+      const unique = Array.from(new Set(payments.map(p => Number(p.ebAmount)||0).filter(v=>v>0)));
+      if (unique.length === 1){ ebAmountEl.textContent = `${unique[0]}`; ebAmountNoteEl.textContent = ""; }
+      else if (unique.length > 1){ ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = "Varies by flat; set a single common amount."; }
+      else { ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = ""; }
+    }
+    const allEbPaid = payments.length ? payments.every(p=>p.ebPaid) : false;
+    ebPaidEl.textContent = allEbPaid ? "All Paid" : "Pending Exists";
+    ebNextEl.textContent = nextEbWindow();
+
+    /* Sweeper */
+    maidAmountEl.textContent = (data.maid && typeof data.maid.amountThisMonth === "number") ? `${data.maid.amountThisMonth}` : "—";
+    maidLeavesEl.textContent = data.maid?.leavesThisMonth ?? "0";
+    maidPaidEl.textContent   = data.maid?.paidThisMonth ? "Paid" : "Not Paid";
+
+    /* Lift colors */
+    if (data.lift){
+      const insDays = daysUntil(data.lift.insurance?.validUntil);
+      liftInsPaidEl.textContent  = data.lift.insurance?.paid ? "Paid" : "Not Paid";
+      liftInsValidEl.textContent = data.lift.insurance?.validUntil || "—";
+      liftInsDaysEl.textContent  = (insDays===null) ? "" : (insDays < 0 ? `${Math.abs(insDays)} days overdue` : `${insDays} days left`);
+      setStatusColor(rowIns, insDays);
+
+      const amcDays = daysUntil(data.lift.amc?.validUntil);
+      liftAmcPaidEl.textContent  = data.lift.amc?.paid ? "Paid" : "Not Paid";
+      liftAmcValidEl.textContent = data.lift.amc?.validUntil || "—";
+      liftAmcDaysEl.textContent  = (amcDays===null) ? "" : (amcDays < 0 ? `${Math.abs(amcDays)} days overdue` : `${amcDays} days left`);
+      setStatusColor(rowAmc, amcDays);
+    }
+
+    /* OPL */
+    const opl = Array.isArray(data.opl) ? data.opl : [];
+    const openItems = opl.filter(x => (String(x.status||"").toLowerCase() !== "closed"));
+    const closedItems = opl.filter(x => (String(x.status||"").toLowerCase() === "closed"));
+    oplOpenCountEl.textContent = String(openItems.length);
+    oplClosedCountEl.textContent = String(closedItems.length);
+
+    oplTableBody.innerHTML = "";
+    [...openItems, ...closedItems].slice(0,5).forEach(item => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${item.id ?? ""}</td>
+        <td>${item.title ?? item.issue ?? ""}</td>
+        <td class="${String(item.status||"").toLowerCase()==="closed" ? "ok" : "warn"}">${item.status ?? ""}</td>
+        <td>${item.apartment ?? ""}</td>
+        <td>${item.remarks ?? ""}</td>
+      `;
+      oplTableBody.appendChild(tr);
+    });
+    oplMoreBtn.onclick = ()=>{
+      const rows = [...openItems, ...closedItems];
+      if (!rows.length){ openModalHTML("OPL — Full List", "<p class='small muted'>No items.</p>"); return; }
+      let html = `<div class="table-wrap"><table><thead><tr>
+      <th>ID</th><th>Title / Issue</th><th>Status</th><th>Apt</th><th>Remarks</th>
+      </tr></thead><tbody>`;
+      rows.forEach(item=>{
+        const st = String(item.status||""); const cls = st.toLowerCase()==="closed" ? "ok" : "warn";
+        html += `<tr>
+          <td>${item.id ?? ""}</td>
+          <td>${item.title ?? item.issue ?? ""}</td>
+          <td class="${cls}">${st}</td>
+          <td>${item.apartment ?? ""}</td>
+          <td>${item.remarks ?? ""}</td>
+        </tr>`;
+      });
+      html += `</tbody></table></div>`;
+      openModalHTML("OPL — Full List", html);
+    };
+
+    /* Balance */
+    const bal = data.balance || {};
+    const total = Number(bal.totalBalance||0);
+    const exp   = Number(bal.totalExpenses||0);
+    const avail = Number(bal.available|| (total - exp));
+    document.getElementById("bal-available").textContent = `${avail}`;
+    document.getElementById("bal-total-inline").textContent = `${total}`;
+    document.getElementById("bal-expenses-inline").textContent = `${exp}`;
+
+  }catch(err){
+    console.error("Dashboard fetch failed:", err);
+  }
 }
-.topnav a{
-  color:#fff; text-decoration:none; font-weight:800; letter-spacing:.2px;
-  padding:6px 12px; border-radius:999px; background:rgba(255,255,255,.14);
-  transition: transform .15s ease, background .2s ease, box-shadow .2s ease;
-  white-space: nowrap; font-size:13px;
-}
-.topnav a:hover{ transform:translateY(-1px); background:rgba(255,255,255,.22); box-shadow:0 4px 10px rgba(0,0,0,.12); }
 
-/* Layout containers */
-.container{ max-width:1200px; margin:16px auto; padding:0 14px; }
-.panel{ border-left:4px solid var(--brand-b); padding-left:10px; scroll-margin-top:70px; }
-.panel > h2{ margin:4px 0 10px; font-size:18px; }
-
-/* Two-column grid on desktop, stacks on mobile */
-.stat-columns{ display:grid; gap:12px; grid-template-columns: 1fr; }
-.stat-columns .col{ display:flex; flex-direction:column; gap:12px; }
-
-@media (min-width: 960px){
-  .stat-columns{ grid-template-columns: 1fr 1fr; }
-}
-
-/* Groups & rows */
-.stat-group{ background: transparent; }
-.stat-group > h3{ margin:0 0 8px; font-size:14px; color:var(--dark); display:flex; align-items:center; gap:8px; }
-.emoji{ font-size:16px; line-height:1; }
-
-.stat-list{ display:grid; gap:8px; grid-template-columns: 1fr; }
-.stat-list.two{ grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-
-.stat-item{
-  display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center;
-  background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px;
-  box-shadow: 0 6px 14px rgba(191, 90, 0, .08); color: var(--dark);
-}
-.stat-item strong{ font-size:18px; color: var(--dark); }
-.stat-item small{ grid-column: 1 / -1; color:var(--mid); }
-.stat-item.linklike{ cursor:pointer; text-align:left; }
-.stat-item.linklike:hover{ background: #fff7ed; }
-.stat-item.linklike:active{ transform: scale(.99); }
-
-/* Lift expiry coloring */
-.status{ border-left:4px solid var(--line); }
-.status.ok{ border-left-color: var(--ok); }
-.status.warn{ border-left-color: var(--warn); }
-.status.bad{ border-left-color: var(--bad); }
-.row-main{ display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; }
-.row-sub{ display:flex; gap:8px; align-items:center; color:var(--mid); }
-
-/* Details + tables */
-.details{ margin-top:8px }
-.details summary{ cursor:pointer; user-select:none; padding:10px 12px; background:#fff; border:1px solid var(--line); border-radius:10px; font-weight:700; color:var(--dark) }
-.details[open] summary{ border-bottom-left-radius:0; border-bottom-right-radius:0 }
-.table-wrap{ overflow-x:auto; background:#fff; border-radius:12px; margin-top:6px; border:1px solid var(--line); box-shadow:0 6px 16px rgba(191, 90, 0, .08) }
-table{ width:100%; border-collapse:collapse }
-th,td{ padding:10px 12px; border-bottom:1px solid #f3f4f6; font-size:13px }
-th{ text-align:left; color:var(--mid); font-weight:700 }
-td.ok{ color:var(--ok); font-weight:700 }
-td.warn{ color:var(--bad); font-weight:700 }
-
-/* Buttons & modal */
-.right{ display:flex; justify-content:flex-end; margin-top:8px }
-button{ padding:10px 12px; background: var(--brand-a); border:none; color:#fff; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px; transition: transform .12s ease, filter .2s ease; }
-button:hover{ filter:brightness(1.05) }
-button:active{ transform: scale(.98) }
-
-.modal.hidden{ display:none }
-.modal{ position:fixed; inset:0; z-index:50; }
-.modal-backdrop{ position:absolute; inset:0; background:rgba(0,0,0,.35); backdrop-filter: blur(2px); }
-.modal-card{ position:relative; margin:8vh auto 0; max-width:760px; background:#fff; border-radius:12px; padding:14px; box-shadow:0 20px 40px rgba(0,0,0,.18); border:1px solid var(--line) }
-.modal-x{ position:absolute; right:10px; top:6px; border:none; background:transparent; font-size:22px; cursor:pointer; }
-#modal-title{ margin:4px 0 8px; font-size:16px; color:var(--dark) }
-
-/* Accessibility */
-:focus-visible{ outline:3px solid #fb923c; outline-offset:2px }
-@media (prefers-reduced-motion: reduce){ *{ animation:none !important; transition:none !important } }
+loadDashboard();
