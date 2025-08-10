@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Avittam Srinivase Apartment Maintenance Portal</title>
+  <title>Avittam Srinivase Apartment Portal</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -24,12 +24,12 @@
 
     <div class="tile-grid">
       <!-- Maintenance -->
-      <button class="card clickable" id="card-paid">
+      <button class="card clickable" type="button" id="card-paid">
         <h3>Paid (Flats)</h3>
         <p class="big" id="paid-count">—</p>
         <p class="small muted">Tap to see who paid</p>
       </button>
-      <button class="card clickable warn" id="card-pending">
+      <button class="card clickable warn" type="button" id="card-pending">
         <h3>Pending (Flats)</h3>
         <p class="big" id="pending-count">—</p>
         <p class="small muted">Tap to see who’s due</p>
@@ -45,6 +45,17 @@
         <h3>EB Status</h3>
         <p class="big" id="eb-paid">—</p>
         <p class="small muted">Month: <span id="dash-month-eb"></span></p>
+      </div>
+      <div class="card" id="eb-periods-card">
+        <h3>Next EB Periods</h3>
+        <ul id="eb-periods" class="list"></ul>
+      </div>
+
+      <!-- Common Area Controller (from OPL.Apt) -->
+      <div class="card">
+        <h3>Common Area Controller</h3>
+        <p class="big" id="cac-value">—</p>
+        <p class="small muted">From OPL (Apt)</p>
       </div>
 
       <!-- Maid -->
@@ -80,10 +91,11 @@
       </div>
 
       <!-- Balance & Expenses -->
-      <div class="card accent">
+      <button class="card accent clickable" type="button" id="card-balance">
         <h3>Available Balance</h3>
         <p class="big" id="bal-available">—</p>
-      </div>
+        <p class="small muted">Tap to view transactions</p>
+      </button>
       <div class="card">
         <h3>Total Balance (Σ)</h3>
         <p class="big" id="bal-total">—</p>
@@ -141,7 +153,7 @@
       </table>
     </div>
     <div class="right">
-      <button id="opl-more">View full list</button>
+      <button id="opl-more" type="button">View full list</button>
     </div>
   </section>
 
@@ -149,7 +161,7 @@
     <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
   </footer>
 
-  <!-- Modal (used for Paid/Pending lists and OPL full list) -->
+  <!-- Modal (lists & tables) -->
   <div id="modal" class="modal hidden" aria-hidden="true">
     <div class="modal-backdrop" id="modal-close"></div>
     <div class="modal-card">
@@ -161,6 +173,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=18"></script>
+  <script src="script.js?v=20"></script>
 </body>
 </html>
