@@ -5,6 +5,14 @@ const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZv
 const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
 document.getElementById("year").textContent = new Date().getFullYear();
 
+/* Gate UI behind loader */
+const appEl = document.getElementById("app");
+const loaderEl = document.getElementById("loader");
+const errorEl = document.getElementById("error");
+function showLoader(){ loaderEl.classList.remove("hidden"); appEl.classList.add("hidden"); }
+function hideLoader(){ loaderEl.classList.add("hidden"); appEl.classList.remove("hidden"); }
+function showError(msg){ if(!errorEl) return; errorEl.textContent = msg; errorEl.classList.remove("hidden"); }
+
 /* Month labels */
 const dashMonthEl = document.getElementById("dash-month");
 const dashMonthEB = document.getElementById("dash-month-eb");
@@ -101,16 +109,21 @@ function nextEbWindow(){
   return `${ddmmyyyy(s)} ➜ ${ddmmyyyy(e)}`;
 }
 
+/* Main load */
 async function loadDashboard(){
-  const month = new Date().toISOString().slice(0,7);
-  const monthLabel = new Date(month + "-01").toLocaleString(undefined,{month:"long", year:"numeric"});
-  dashMonthEl.textContent = monthLabel;
-  if (dashMonthEB) dashMonthEB.textContent = monthLabel;
-  if (dashMonthMaid) dashMonthMaid.textContent = monthLabel;
+  showLoader(); // hide app until we finish
 
+  const requested = new Date().toISOString().slice(0,7);
   try{
-    const res = await fetch(`${GAS_BASE_URL}?month=${month}&_=${Date.now()}`, { method:"GET", cache:"no-store" });
+    const res = await fetch(`${GAS_BASE_URL}?month=${requested}&_=${Date.now()}`, { method:"GET", cache:"no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+
+    const monthUsed = data.month || requested;
+    const monthLabel = new Date(monthUsed + "-01").toLocaleString(undefined,{month:"long", year:"numeric"});
+    if (dashMonthEl)  dashMonthEl.textContent  = monthLabel;
+    if (dashMonthEB)  dashMonthEB.textContent  = monthLabel;
+    if (dashMonthMaid)dashMonthMaid.textContent= monthLabel;
 
     /* CAC pill */
     let cac = "—";
@@ -129,7 +142,7 @@ async function loadDashboard(){
     /* Maintenance */
     const payments = Array.isArray(data.payments) ? data.payments : [];
     const paidSet = new Set(payments.filter(p=>p.maintPaid).map(p=>String(p.apartment||"").trim()));
-    const pending = APTS.filter(a => !paidSet.has(a));
+    const pending = ["F1","F2","F3","S1","S2","T1","T2","T3"].filter(a => !paidSet.has(a));
 
     paidCountEl.textContent = String(paidSet.size);
     pendingCountEl.textContent = String(pending.length);
@@ -233,8 +246,11 @@ async function loadDashboard(){
     document.getElementById("bal-total-inline").textContent = `${total}`;
     document.getElementById("bal-expenses-inline").textContent = `${exp}`;
 
+    hideLoader();
   }catch(err){
     console.error("Dashboard fetch failed:", err);
+    showError("Could not load data. Please try again in a moment.");
+    hideLoader(); // still reveal the page so the error is visible
   }
 }
 
