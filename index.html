@@ -8,28 +8,25 @@
 </head>
 <body>
   <header class="hero">
+    <div class="stripe"></div>
     <h1>🏢 Avittam Srinivase Apartment Maintenance Portal</h1>
-    <p>Submit issues, check monthly payments, and view maid & EB status</p>
+    <p>Track maintenance, EB, maid status & lift insurance</p>
   </header>
 
-  <section class="container">
-    <h2>Dashboard — <span id="dash-month"></span></h2>
+  <!-- MAINTENANCE PANEL -->
+  <section class="container panel">
+    <h2>Maintenance — <span id="dash-month"></span></h2>
     <div class="cards">
-      <div class="card"><h3>Paid (Maintenance)</h3><p class="big" id="paid-count">—</p></div>
-      <div class="card"><h3>Pending (Maintenance)</h3><p class="big" id="pending-count">—</p></div>
-      <div class="card"><h3>Maid Today</h3><p class="big" id="maid-today">—</p></div>
-      <div class="card"><h3>Maid Leaves (This Month)</h3><p class="big" id="maid-leaves">—</p></div>
-      <div class="card"><h3>Maid Payment (This Month)</h3><p class="big" id="maid-paid">—</p></div>
-      <div class="card">
-        <h3>EB Bill (This Month)</h3>
-        <p class="small" id="eb-amount">—</p>
-        <p class="big" id="eb-paid">—</p>
+      <div class="card accent">
+        <h3>Paid (Flats)</h3>
+        <p class="big" id="paid-count">—</p>
+      </div>
+      <div class="card warn">
+        <h3>Pending (Flats)</h3>
+        <p class="big" id="pending-count">—</p>
       </div>
     </div>
-  </section>
 
-  <section class="container">
-    <h2>Apartment Status — <span id="dash-month-2"></span></h2>
     <div class="table-wrap">
       <table>
         <thead>
@@ -37,53 +34,79 @@
             <th>Apt</th>
             <th>Maintenance Amount</th>
             <th>Paid?</th>
-            <th>EB Amount</th>
-            <th>EB Paid?</th>
           </tr>
         </thead>
-        <tbody id="apt-table-body"></tbody>
+        <tbody id="apt-table-maint"></tbody>
       </table>
     </div>
   </section>
 
-  <section class="container">
-    <h2>Submit Maintenance Request</h2>
-    <form id="req-form">
-      <div class="grid">
-        <label>Full Name
-          <input type="text" name="name" placeholder="Your Name" required />
-        </label>
-        <label>Apartment
-          <select name="apartment" required>
-            <option value="">Select</option>
-            <option>F1</option><option>F2</option><option>F3</option>
-            <option>S1</option><option>S2</option>
-            <option>T1</option><option>T2</option><option>T3</option>
-          </select>
-        </label>
+  <!-- EB PANEL -->
+  <section class="container panel">
+    <h2>Electricity Board (EB) — <span id="dash-month-eb"></span></h2>
+    <div class="cards">
+      <div class="card">
+        <h3>EB Amount (Common)</h3>
+        <p class="big" id="eb-amount">—</p>
+        <p class="small muted" id="eb-amount-note"></p>
       </div>
+      <div class="card">
+        <h3>EB Status</h3>
+        <p class="big" id="eb-paid">—</p>
+      </div>
+    </div>
 
-      <label>Contact Email (for updates)
-        <input type="email" name="email" placeholder="you@example.com" />
-      </label>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Apt</th>
+            <th>EB Paid?</th>
+          </tr>
+        </thead>
+        <tbody id="apt-table-eb"></tbody>
+      </table>
+    </div>
+  </section>
 
-      <label>Contact Number (optional)
-        <input type="tel" name="phone" placeholder="+65 xxx xxxx" />
-      </label>
+  <!-- MAID PANEL -->
+  <section class="container panel">
+    <h2>Maid — <span id="dash-month-maid"></span></h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Maid Today</h3>
+        <p class="big" id="maid-today">—</p>
+      </div>
+      <div class="card">
+        <h3>Leaves (This Month)</h3>
+        <p class="big" id="maid-leaves">—</p>
+      </div>
+      <div class="card">
+        <h3>Payment (This Month)</h3>
+        <p class="big" id="maid-paid">—</p>
+      </div>
+    </div>
+  </section>
 
-      <label>Issue Description
-        <textarea name="issue" rows="4" placeholder="Describe the issue..." required></textarea>
-      </label>
-
-      <button type="submit">Submit Request</button>
-      <p id="form-msg" class="muted"></p>
-    </form>
+  <!-- LIFT INSURANCE PANEL -->
+  <section class="container panel">
+    <h2>Lift Insurance</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Paid Status</h3>
+        <p class="big" id="lift-paid">—</p>
+      </div>
+      <div class="card">
+        <h3>Valid Until</h3>
+        <p class="big" id="lift-valid">—</p>
+      </div>
+    </div>
   </section>
 
   <footer>
     <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
   </footer>
 
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=10"></script>
 </body>
 </html>
