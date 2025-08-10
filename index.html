@@ -4,11 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Avittam Srinivasa Apartment Portal</title>
+
+  <!-- (Optional) your stylesheet -->
   <link rel="stylesheet" href="style.css?v=6" />
   <meta name="theme-color" content="#f59e0b" />
 </head>
 <body>
-  <!-- Loader -->
+  <!-- Full-screen loader -->
   <div id="loader" class="loader-overlay" aria-busy="true" aria-live="polite">
     <div class="loader-card">
       <div class="spinner" role="status" aria-label="Loading"></div>
@@ -16,7 +18,7 @@
     </div>
   </div>
 
-  <!-- App -->
+  <!-- App (hidden until data loads) -->
   <div id="app" class="hidden">
     <header class="hero">
       <div class="stripe"></div>
@@ -35,6 +37,7 @@
       </span>
     </nav>
 
+    <!-- Error bar (hidden by default) -->
     <div id="error" class="error-banner hidden"></div>
 
     <main class="container">
@@ -56,6 +59,7 @@
                   <strong id="pending-count">0</strong>
                 </button>
               </div>
+
               <details class="details">
                 <summary>Maintenance details (per flat)</summary>
                 <div class="table-wrap">
@@ -193,6 +197,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=34"></script>
+  <!-- Your JS -->
+  <script src="script.js?v=40"></script>
 </body>
 </html>
