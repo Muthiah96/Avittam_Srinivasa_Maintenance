@@ -1,9 +1,22 @@
 /* ====== CONFIG ====== */
-const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec";
+const GAS_BASE_URL =
+  "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec";
 /* ==================== */
 
 const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
 document.getElementById("year").textContent = new Date().getFullYear();
+
+/* ---------- Helpers ---------- */
+// Safe text write + Indian number format
+const setText = (id, val) => {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+  else console.warn("Missing element:", id);
+};
+const fmtINR = (n) => {
+  const x = Number(n);
+  return Number.isFinite(x) ? x.toLocaleString("en-IN") : "0";
+};
 
 /* Loader/Error */
 const appEl = document.getElementById("app");
@@ -34,7 +47,7 @@ const ebAmountNoteEl = document.getElementById("eb-amount-note");
 const ebPaidEl = document.getElementById("eb-paid");
 const ebNextEl = document.getElementById("eb-next");
 
-/* Sweeper (maid IDs kept) */
+/* Sweeper */
 const maidAmountEl = document.getElementById("maid-amount");
 const maidLeavesEl = document.getElementById("maid-leaves");
 const maidPaidEl = document.getElementById("maid-paid");
@@ -73,7 +86,7 @@ if (modalClose) modalClose.addEventListener("click", closeModal);
 if (modalX) modalX.addEventListener("click", closeModal);
 document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeModal(); });
 
-/* Date helpers */
+/* ---------- Date helpers ---------- */
 function parseDateFlexible(s){
   if (!s) return null; if (s instanceof Date) return s;
   const t=String(s).trim(), d1=new Date(t); if(!isNaN(d1)) return d1;
@@ -109,7 +122,7 @@ function nextEbWindow(){
   return `${ddmmyyyy(s)} ➜ ${ddmmyyyy(e)}`;
 }
 
-/* Main load */
+/* ---------- Main load ---------- */
 async function loadDashboard(){
   showLoader();
 
@@ -121,11 +134,11 @@ async function loadDashboard(){
 
     const monthUsed = data.month || requested;
     const monthLabel = new Date(monthUsed + "-01").toLocaleString(undefined,{month:"long", year:"numeric"});
-    if (dashMonthEl)  dashMonthEl.textContent  = monthLabel;
-    if (dashMonthEB)  dashMonthEB.textContent  = monthLabel;
-    if (dashMonthMaid)dashMonthMaid.textContent= monthLabel;
+    setText("dash-month", monthLabel);
+    setText("dash-month-eb", monthLabel);
+    setText("dash-month-maid", monthLabel);
 
-    /* CAC pill */
+    /* CAC pill (from OPL remarks/title) */
     let cac = "—";
     if (Array.isArray(data.opl)){
       for (let i=data.opl.length-1; i>=0; i--){
@@ -137,18 +150,24 @@ async function loadDashboard(){
         }
       }
     }
-    cacText.textContent = `Common Area Controller: ${cac}`;
+    setText("cac-text", `Common Area Controller: ${cac}`);
 
     /* Maintenance */
     const payments = Array.isArray(data.payments) ? data.payments : [];
     const paidSet = new Set(payments.filter(p=>p.maintPaid).map(p=>String(p.apartment||"").trim().toUpperCase()));
     const pending = APTS.filter(a => !paidSet.has(a));
 
-    paidCountEl.textContent = String(paidSet.size);
-    pendingCountEl.textContent = String(pending.length);
+    setText("paid-count", paidSet.size);
+    setText("pending-count", pending.length);
 
-    btnPaid.onclick = ()=> openModalHTML("Flats Paid", `<ul id="modal-list">${Array.from(paidSet).sort().map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
-    btnPending.onclick = ()=> openModalHTML("Flats Pending (Due)", `<ul id="modal-list">${pending.map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
+    btnPaid.onclick = ()=> openModalHTML(
+      "Flats Paid",
+      `<ul id="modal-list">${Array.from(paidSet).sort().map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`
+    );
+    btnPending.onclick = ()=> openModalHTML(
+      "Flats Pending (Due)",
+      `<ul id="modal-list">${pending.map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`
+    );
 
     if (tbodyMaint){
       tbodyMaint.innerHTML = "";
@@ -167,25 +186,25 @@ async function loadDashboard(){
     /* EB */
     const eb = data.eb || {};
     if (typeof eb.amountCommon === "number"){
-      ebAmountEl.textContent = `${eb.amountCommon}`;
-      ebAmountNoteEl.textContent = "";
+      setText("eb-amount", eb.amountCommon);
+      setText("eb-amount-note", "");
     } else if (eb.note){
-      ebAmountEl.textContent = "—";
-      ebAmountNoteEl.textContent = eb.note;
+      setText("eb-amount", "—");
+      setText("eb-amount-note", eb.note);
     } else {
       const unique = Array.from(new Set(payments.map(p => Number(p.ebAmount)||0).filter(v=>v>0)));
-      if (unique.length === 1){ ebAmountEl.textContent = `${unique[0]}`; ebAmountNoteEl.textContent = ""; }
-      else if (unique.length > 1){ ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = "Varies by flat; set a single common amount."; }
-      else { ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = ""; }
+      if (unique.length === 1){ setText("eb-amount", unique[0]); setText("eb-amount-note",""); }
+      else if (unique.length > 1){ setText("eb-amount","—"); setText("eb-amount-note","Varies by flat; set a single common amount."); }
+      else { setText("eb-amount","—"); setText("eb-amount-note",""); }
     }
     const allEbPaid = payments.length ? payments.every(p=>p.ebPaid) : false;
-    ebPaidEl.textContent = allEbPaid ? "All Paid" : "Pending Exists";
-    ebNextEl.textContent = nextEbWindow();
+    setText("eb-paid", allEbPaid ? "All Paid" : "Pending Exists");
+    setText("eb-next", nextEbWindow());
 
     /* Sweeper */
-    maidAmountEl.textContent = (data.maid && typeof data.maid.amountThisMonth === "number") ? `${data.maid.amountThisMonth}` : "—";
-    maidLeavesEl.textContent = data.maid?.leavesThisMonth ?? "0";
-    maidPaidEl.textContent   = data.maid?.paidThisMonth ? "Paid" : "Not Paid";
+    setText("maid-amount", (data.maid && typeof data.maid.amountThisMonth === "number") ? data.maid.amountThisMonth : "—");
+    setText("maid-leaves", data.maid?.leavesThisMonth ?? "0");
+    setText("maid-paid",   data.maid?.paidThisMonth ? "Paid" : "Not Paid");
 
     /* Lift */
     if (data.lift){
@@ -206,8 +225,8 @@ async function loadDashboard(){
     const opl = Array.isArray(data.opl) ? data.opl : [];
     const openItems = opl.filter(x => (String(x.status||"").toLowerCase() !== "closed"));
     const closedItems = opl.filter(x => (String(x.status||"").toLowerCase() === "closed"));
-    oplOpenCountEl.textContent = String(openItems.length);
-    oplClosedCountEl.textContent = String(closedItems.length);
+    setText("opl-open-count", openItems.length);
+    setText("opl-closed-count", closedItems.length);
 
     oplTableBody.innerHTML = "";
     [...openItems, ...closedItems].slice(0,5).forEach(item => {
@@ -241,11 +260,22 @@ async function loadDashboard(){
       openModalHTML("OPL — Full List", html);
     };
 
+    /* Balance — write safely + format numbers */
+    console.log("Balance from API:", data.balance);
+    (function updateBalance(bal){
+      const total = Number(bal?.totalBalance ?? 0);
+      const exp   = Number(bal?.totalExpenses ?? 0);
+      const avail = Number(bal?.available ?? (total - exp));
+      setText("bal-available",       fmtINR(avail));
+      setText("bal-total-inline",    fmtINR(total));
+      setText("bal-expenses-inline", fmtINR(exp));
+    })(data.balance || {});
+
     hideLoader();
   }catch(err){
     console.error("Dashboard fetch failed:", err);
     showError("Could not load data. Please try again in a moment.");
-    hideLoader(); // reveal so the error shows
+    hideLoader(); // show page so error bar is visible
   }
 }
 
