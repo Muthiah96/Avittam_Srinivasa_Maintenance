@@ -17,9 +17,8 @@ body {
   color: #fff; padding: 36px 16px; text-align: center;
 }
 .hero h1 { margin: 0 0 6px; }
-.container {
-  max-width: 980px; margin: 24px auto; padding: 0 16px;
-}
+.container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+
 .cards {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;
 }
@@ -30,19 +29,19 @@ body {
 .card h3 { margin: 0 0 8px; font-size: 16px; color: var(--muted); }
 .big { font-weight: 700; font-size: 28px; margin: 0; }
 .small { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+
 .table-wrap { overflow-x: auto; background: var(--card); border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
 table { width: 100%; border-collapse: collapse; }
 th, td { padding: 12px 14px; border-bottom: 1px solid #eceff4; }
 th { text-align: left; color: var(--muted); font-weight: 600; }
 td.ok { color: var(--ok); font-weight: 700; }
 td.warn { color: var(--warn); font-weight: 700; }
+
 form {
   background: var(--card); border-radius: 14px; padding: 16px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.06);
 }
-.grid {
-  display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 label { display: grid; gap: 6px; font-size: 14px; }
 input, select, textarea {
   padding: 10px 12px; border: 1px solid #dbe0ea; border-radius: 10px; font-size: 14px;

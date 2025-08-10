@@ -16,26 +16,11 @@
   <section class="container">
     <h2>Dashboard — <span id="dash-month"></span></h2>
     <div class="cards">
-      <div class="card">
-        <h3>Paid (Maintenance)</h3>
-        <p class="big" id="paid-count">—</p>
-      </div>
-      <div class="card">
-        <h3>Pending (Maintenance)</h3>
-        <p class="big" id="pending-count">—</p>
-      </div>
-      <div class="card">
-        <h3>Maid Today</h3>
-        <p class="big" id="maid-today">—</p>
-      </div>
-      <div class="card">
-        <h3>Maid Leaves (This Month)</h3>
-        <p class="big" id="maid-leaves">—</p>
-      </div>
-      <div class="card">
-        <h3>Maid Payment (This Month)</h3>
-        <p class="big" id="maid-paid">—</p>
-      </div>
+      <div class="card"><h3>Paid (Maintenance)</h3><p class="big" id="paid-count">—</p></div>
+      <div class="card"><h3>Pending (Maintenance)</h3><p class="big" id="pending-count">—</p></div>
+      <div class="card"><h3>Maid Today</h3><p class="big" id="maid-today">—</p></div>
+      <div class="card"><h3>Maid Leaves (This Month)</h3><p class="big" id="maid-leaves">—</p></div>
+      <div class="card"><h3>Maid Payment (This Month)</h3><p class="big" id="maid-paid">—</p></div>
       <div class="card">
         <h3>EB Bill (This Month)</h3>
         <p class="small" id="eb-amount">—</p>
@@ -58,9 +43,7 @@
             <th>EB Paid?</th>
           </tr>
         </thead>
-        <tbody id="apt-table-body">
-          <!-- populated by JS -->
-        </tbody>
+        <tbody id="apt-table-body"></tbody>
       </table>
     </div>
   </section>
@@ -70,12 +53,10 @@
     <h2>Submit Maintenance Request</h2>
     <form id="req-form">
       <div class="grid">
-        <label>
-          Full Name
+        <label>Full Name
           <input type="text" name="name" placeholder="Your Name" required />
         </label>
-        <label>
-          Apartment
+        <label>Apartment
           <select name="apartment" required>
             <option value="">Select</option>
             <option>F1</option><option>F2</option><option>F3</option>
@@ -85,18 +66,15 @@
         </label>
       </div>
 
-      <label>
-        Contact Email (for updates)
+      <label>Contact Email (for updates)
         <input type="email" name="email" placeholder="you@example.com" />
       </label>
 
-      <label>
-        Contact Number (optional)
+      <label>Contact Number (optional)
         <input type="tel" name="phone" placeholder="+65 xxx xxxx" />
       </label>
 
-      <label>
-        Issue Description
+      <label>Issue Description
         <textarea name="issue" rows="4" placeholder="Describe the issue..." required></textarea>
       </label>
 
@@ -109,6 +87,7 @@
     <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
   </footer>
 
-  <script src="script.js"></script>
+  <!-- cache-bust with ?v=... when you push updates -->
+  <script src="script.js?v=4"></script>
 </body>
 </html>

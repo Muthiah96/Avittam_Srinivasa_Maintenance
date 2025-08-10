@@ -1,6 +1,7 @@
-/* ====== CONFIG: paste your Apps Script web app URL here ====== */
-const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec"; // e.g. https://script.google.com/macros/s/AKfycb.../exec
-/* ============================================================= */
+/* ====== CONFIG ====== */
+// Put your Apps Script Web App URL here:
+const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec";
+/* ==================== */
 
 const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
 
@@ -24,34 +25,37 @@ function prettyMonth(ymStr) {
   const [Y,M] = ymStr.split("-");
   return new Date(parseInt(Y), parseInt(M)-1, 1).toLocaleString(undefined,{month:"long", year:"numeric"});
 }
+
 async function loadDashboard() {
   const month = ym();
   dashMonthEl.textContent = prettyMonth(month);
   dashMonthEl2.textContent = prettyMonth(month);
 
   try {
-    const res = await fetch(`${GAS_BASE_URL}?month=${month}`, { method: "GET" });
-    if (!res.ok) throw new Error("Failed to fetch");
+    const url = `${GAS_BASE_URL}?month=${month}&_=${Date.now()}`; // cache-bust
+    console.log("Fetching dashboard:", url);
+    const res = await fetch(url, { method: "GET", cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch dashboard");
     const data = await res.json();
-    // data shape (see Apps Script below):
-    // {
-    //   month, payments: [{apartment, maintAmount, maintPaid, ebAmount, ebPaid}], 
-    //   maid: {todayCame: true/false, leavesThisMonth: number, paidThisMonth: true/false},
-    //   totals: {paidCount, pendingCount, ebAmountTotal}
-    // }
+    console.log("Dashboard data:", data);
 
-    paidCountEl.textContent = data?.totals?.paidCount ?? "0";
-    pendingCountEl.textContent = data?.totals?.pendingCount ?? "0";
-    maidTodayEl.textContent = data?.maid?.todayCame ? "Came" : "Not Came";
-    maidLeavesEl.textContent = data?.maid?.leavesThisMonth ?? "0";
-    maidPaidEl.textContent = data?.maid?.paidThisMonth ? "Paid" : "Not Paid";
-    ebAmountEl.textContent = data?.totals?.ebAmountTotal != null ? `Total: ${data.totals.ebAmountTotal}` : "—";
-    ebPaidEl.textContent = (data?.payments?.every(r => r.ebPaid) ? "All Paid" : "Pending Exists");
+    paidCountEl.textContent    = data.totals?.paidCount ?? "0";
+    pendingCountEl.textContent = data.totals?.pendingCount ?? "0";
 
-    // Fill apartment table
+    maidTodayEl.textContent = (data.maid?.todayCame === true) ? "Came"
+                              : (data.maid?.todayCame === false) ? "Not Came" : "—";
+    maidLeavesEl.textContent = data.maid?.leavesThisMonth ?? "0";
+    maidPaidEl.textContent   = data.maid?.paidThisMonth ? "Paid" : "Not Paid";
+
+    ebAmountEl.textContent = (data.totals?.ebAmountTotal != null)
+      ? `Total: ${data.totals.ebAmountTotal}` : "—";
+    ebPaidEl.textContent = (data.payments?.length && data.payments.every(r => r.ebPaid))
+      ? "All Paid" : "Pending Exists";
+
+    // Table
     tbody.innerHTML = "";
     APTS.forEach(apt => {
-      const row = data.payments?.find(p => p.apartment === apt) || {};
+      const row = (data.payments || []).find(p => p.apartment === apt) || {};
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${apt}</td>
@@ -63,18 +67,7 @@ async function loadDashboard() {
       tbody.appendChild(tr);
     });
   } catch (e) {
-    console.error(e);
-    // Fallback demo data so UI still renders
-    paidCountEl.textContent = "0";
-    pendingCountEl.textContent = APTS.length.toString();
-    maidTodayEl.textContent = "—";
-    maidLeavesEl.textContent = "—";
-    maidPaidEl.textContent = "—";
-    ebAmountEl.textContent = "—";
-    ebPaidEl.textContent = "—";
-    tbody.innerHTML = APTS.map(a=>`<tr>
-      <td>${a}</td><td>-</td><td class="warn">No</td><td>-</td><td class="warn">No</td>
-    </tr>`).join("");
+    console.error("Dashboard fetch failed:", e);
   }
 }
 
@@ -84,20 +77,16 @@ document.getElementById("req-form").addEventListener("submit", async (e) => {
   msg.textContent = "Submitting...";
 
   const form = e.target;
-  const fd = new FormData(form);        // multipart/form-data (allowed content-type)
+  const fd = new FormData(form);            // **no headers** → simple POST (no CORS preflight)
   fd.append("timestamp", new Date().toISOString());
 
   try {
-    const res = await fetch(GAS_BASE_URL, {
-      method: "POST",
-      body: fd              // <-- NO headers here (do NOT set Content-Type)
-    });
-
-    // If your Apps Script returns JSON
+    const res = await fetch(GAS_BASE_URL, { method: "POST", body: fd });
     const out = await res.json().catch(() => ({}));
     if (out && out.success) {
       msg.textContent = "Request submitted. You will receive updates via email.";
       form.reset();
+      loadDashboard(); // refresh if you want
     } else {
       msg.textContent = "Submission failed. Please try again.";
     }
@@ -108,4 +97,3 @@ document.getElementById("req-form").addEventListener("submit", async (e) => {
 });
 
 loadDashboard();
-
