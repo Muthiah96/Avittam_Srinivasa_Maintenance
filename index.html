@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Avittam Srinivasa Apartment Portal</title>
-  <link rel="stylesheet" href="style.css?v=5" />
+  <link rel="stylesheet" href="style.css?v=6" />
   <meta name="theme-color" content="#f59e0b" />
 </head>
 <body>
-  <!-- Full-screen loader (shown first) -->
+  <!-- Loader -->
   <div id="loader" class="loader-overlay" aria-busy="true" aria-live="polite">
     <div class="loader-card">
       <div class="spinner" role="status" aria-label="Loading"></div>
@@ -16,14 +16,14 @@
     </div>
   </div>
 
-  <!-- Everything else is hidden until data loads -->
+  <!-- App -->
   <div id="app" class="hidden">
     <header class="hero">
       <div class="stripe"></div>
       <h1>Avittam Srinivasa Apartment Portal</h1>
     </header>
 
-    <!-- Sticky nav with CAC pill on the right -->
+    <!-- Sticky nav with CAC pill -->
     <nav class="topnav" role="navigation" aria-label="Primary">
       <a href="#dashboard">Dashboard</a>
       <a href="#opl">OPL</a>
@@ -35,7 +35,6 @@
       </span>
     </nav>
 
-    <!-- Optional error banner -->
     <div id="error" class="error-banner hidden"></div>
 
     <main class="container">
@@ -46,7 +45,7 @@
           <div class="col">
             <!-- Maintenance -->
             <div class="stat-group">
-              <h3><span class="emoji" aria-hidden="true">🔧</span>Maintenance</h3>
+              <h3><span class="emoji">🔧</span>Maintenance</h3>
               <div class="stat-list">
                 <button class="stat-item linklike" id="btn-paid" type="button">
                   <span>Paid (Flats)</span>
@@ -72,7 +71,7 @@
 
             <!-- Sweeper -->
             <div class="stat-group">
-              <h3><span class="emoji" aria-hidden="true">🧹</span>Sweeper</h3>
+              <h3><span class="emoji">🧹</span>Sweeper</h3>
               <div class="stat-list">
                 <div class="stat-item">
                   <span>Amount (This Month)</span>
@@ -94,7 +93,7 @@
           <div class="col">
             <!-- EB -->
             <div class="stat-group">
-              <h3><span class="emoji" aria-hidden="true">⚡</span>EB</h3>
+              <h3><span class="emoji">⚡</span>EB</h3>
               <div class="stat-list">
                 <div class="stat-item">
                   <span>Amount (Common)</span>
@@ -115,7 +114,7 @@
 
             <!-- Lift -->
             <div class="stat-group">
-              <h3><span class="emoji" aria-hidden="true">🛗</span>Lift Details</h3>
+              <h3><span class="emoji">🛗</span>Lift Details</h3>
               <div class="stat-list">
                 <div class="stat-item status" id="row-ins">
                   <div class="row-main">
@@ -144,7 +143,7 @@
 
             <!-- Balance -->
             <div class="stat-group">
-              <h3><span class="emoji" aria-hidden="true">💰</span>Balance</h3>
+              <h3><span class="emoji">💰</span>Balance</h3>
               <div class="stat-list">
                 <a class="stat-item linklike" id="link-balance" href="https://docs.google.com/spreadsheets/d/1vGhGbTScu8bdkP2xLb31vuPYKfjv_E6aKCqYwGAHcN0/edit" target="_blank" rel="noopener">
                   <span>Available (Total − Expenses)</span>
@@ -194,6 +193,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=31"></script>
+  <script src="script.js?v=34"></script>
 </body>
 </html>

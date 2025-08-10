@@ -33,8 +33,8 @@
 }
 .spinner{
   width:48px; height:48px; border-radius:50%;
-  border:4px solid #fde68a;           /* orange-200 ring */
-  border-top-color: var(--brand-b);   /* orange accent */
+  border:4px solid #fde68a;           /* ring */
+  border-top-color: var(--brand-b);   /* accent */
   animation: spin 1s linear infinite;
 }
 @keyframes spin{ to{ transform:rotate(360deg) } }

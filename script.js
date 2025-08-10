@@ -5,7 +5,7 @@ const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZv
 const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
 document.getElementById("year").textContent = new Date().getFullYear();
 
-/* Gate UI behind loader */
+/* Loader/Error */
 const appEl = document.getElementById("app");
 const loaderEl = document.getElementById("loader");
 const errorEl = document.getElementById("error");
@@ -111,7 +111,7 @@ function nextEbWindow(){
 
 /* Main load */
 async function loadDashboard(){
-  showLoader(); // hide app until we finish
+  showLoader();
 
   const requested = new Date().toISOString().slice(0,7);
   try{
@@ -141,8 +141,8 @@ async function loadDashboard(){
 
     /* Maintenance */
     const payments = Array.isArray(data.payments) ? data.payments : [];
-    const paidSet = new Set(payments.filter(p=>p.maintPaid).map(p=>String(p.apartment||"").trim()));
-    const pending = ["F1","F2","F3","S1","S2","T1","T2","T3"].filter(a => !paidSet.has(a));
+    const paidSet = new Set(payments.filter(p=>p.maintPaid).map(p=>String(p.apartment||"").trim().toUpperCase()));
+    const pending = APTS.filter(a => !paidSet.has(a));
 
     paidCountEl.textContent = String(paidSet.size);
     pendingCountEl.textContent = String(pending.length);
@@ -153,7 +153,7 @@ async function loadDashboard(){
     if (tbodyMaint){
       tbodyMaint.innerHTML = "";
       APTS.forEach(apt => {
-        const row = payments.find(p => String(p.apartment) === apt) || {};
+        const row = payments.find(p => String(p.apartment).toUpperCase() === apt) || {};
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${apt}</td>
@@ -166,9 +166,13 @@ async function loadDashboard(){
 
     /* EB */
     const eb = data.eb || {};
-    if (typeof eb.amountCommon === "number"){ ebAmountEl.textContent = `${eb.amountCommon}`; ebAmountNoteEl.textContent = ""; }
-    else if (eb.note){ ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = eb.note; }
-    else {
+    if (typeof eb.amountCommon === "number"){
+      ebAmountEl.textContent = `${eb.amountCommon}`;
+      ebAmountNoteEl.textContent = "";
+    } else if (eb.note){
+      ebAmountEl.textContent = "—";
+      ebAmountNoteEl.textContent = eb.note;
+    } else {
       const unique = Array.from(new Set(payments.map(p => Number(p.ebAmount)||0).filter(v=>v>0)));
       if (unique.length === 1){ ebAmountEl.textContent = `${unique[0]}`; ebAmountNoteEl.textContent = ""; }
       else if (unique.length > 1){ ebAmountEl.textContent = "—"; ebAmountNoteEl.textContent = "Varies by flat; set a single common amount."; }
@@ -237,20 +241,11 @@ async function loadDashboard(){
       openModalHTML("OPL — Full List", html);
     };
 
-    /* Balance */
-    const bal = data.balance || {};
-    const total = Number(bal.totalBalance||0);
-    const exp   = Number(bal.totalExpenses||0);
-    const avail = Number(bal.available|| (total - exp));
-    document.getElementById("bal-available").textContent = `${avail}`;
-    document.getElementById("bal-total-inline").textContent = `${total}`;
-    document.getElementById("bal-expenses-inline").textContent = `${exp}`;
-
     hideLoader();
   }catch(err){
     console.error("Dashboard fetch failed:", err);
     showError("Could not load data. Please try again in a moment.");
-    hideLoader(); // still reveal the page so the error is visible
+    hideLoader(); // reveal so the error shows
   }
 }
 
