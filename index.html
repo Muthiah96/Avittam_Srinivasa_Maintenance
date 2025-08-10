@@ -3,26 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Avittam Srinivase Apartment Portal</title>
+  <title>Avittam Srinivasa Apartment Portal</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="hero">
     <div class="stripe"></div>
-    <h1>Avittam Srinivase Apartment Portal</h1>
-
-    <!-- Top-right badge with icon -->
-    <div class="header-right">
-      <span id="cac-badge" class="badge-icon" title="Common Area Controller">
-        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M3 5l9-3 9 3v6c0 5-3.8 9.7-9 11-5.2-1.3-9-6-9-11V5z" fill="currentColor"/>
-        </svg>
-        <span id="cac-text">Common Area Controller: —</span>
-      </span>
-    </div>
+    <h1>Avittam Srinivasa Apartment Portal</h1>
   </header>
 
-  <!-- Compact sticky nav -->
+  <!-- NEW: sub-header (below header) showing Common Area Controller -->
+  <div class="subhead">
+    <span class="badge-icon" title="Common Area Controller">
+      <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 5l9-3 9 3v6c0 5-3.8 9.7-9 11-5.2-1.3-9-6-9-11V5z" fill="currentColor"/>
+      </svg>
+      <span id="cac-text">Common Area Controller: —</span>
+    </span>
+  </div>
+
+  <!-- Sticky nav -->
   <nav class="topnav" role="navigation" aria-label="Primary">
     <a href="#dashboard">Dashboard</a>
     <a href="#opl">OPL</a>
@@ -63,9 +63,9 @@
             </details>
           </div>
 
-          <!-- Maid -->
+          <!-- Sweeper (renamed from Maid) -->
           <div class="stat-group">
-            <h3><span class="emoji" aria-hidden="true">🧹</span>Maid</h3>
+            <h3><span class="emoji" aria-hidden="true">🧹</span>Sweeper</h3>
             <div class="stat-list">
               <div class="stat-item">
                 <span>Amount (This Month)</span>
@@ -174,7 +174,7 @@
   </main>
 
   <footer>
-    <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
+    <p>© <span id="year"></span> Avittam Srinivasa Apartment Association</p>
   </footer>
 
   <!-- Modal -->
@@ -187,7 +187,7 @@
     </div>
   </div>
 
-  <!-- Your existing JS works as-is; version bump to refresh -->
+  <!-- Your existing JS still works; no changes needed -->
   <script src="script.js?v=26"></script>
 </body>
 </html>
