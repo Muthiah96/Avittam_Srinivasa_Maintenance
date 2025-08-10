@@ -10,11 +10,21 @@
   <header class="hero">
     <div class="stripe"></div>
     <h1>🏢 Avittam Srinivase Apartment Maintenance Portal</h1>
-    <p>Track maintenance, EB, maid status & lift insurance</p>
+    <p>Track maintenance, EB, maid status, lift details, OPL & history</p>
   </header>
 
-  <!-- MAINTENANCE PANEL -->
-  <section class="container panel">
+  <!-- Top Nav -->
+  <nav class="topnav">
+    <a href="#maintenance">Maintenance</a>
+    <a href="#eb">EB</a>
+    <a href="#maid">Maid</a>
+    <a href="#lift">Lift Details</a>
+    <a href="#opl">OPL</a>
+    <a href="#history">History</a>
+  </nav>
+
+  <!-- MAINTENANCE -->
+  <section class="container panel" id="maintenance">
     <h2>Maintenance — <span id="dash-month"></span></h2>
     <div class="cards">
       <div class="card accent">
@@ -41,8 +51,8 @@
     </div>
   </section>
 
-  <!-- EB PANEL -->
-  <section class="container panel">
+  <!-- EB -->
+  <section class="container panel" id="eb">
     <h2>Electricity Board (EB) — <span id="dash-month-eb"></span></h2>
     <div class="cards">
       <div class="card">
@@ -55,22 +65,10 @@
         <p class="big" id="eb-paid">—</p>
       </div>
     </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Apt</th>
-            <th>EB Paid?</th>
-          </tr>
-        </thead>
-        <tbody id="apt-table-eb"></tbody>
-      </table>
-    </div>
   </section>
 
-  <!-- MAID PANEL -->
-  <section class="container panel">
+  <!-- MAID -->
+  <section class="container panel" id="maid">
     <h2>Maid — <span id="dash-month-maid"></span></h2>
     <div class="cards">
       <div class="card">
@@ -88,18 +86,73 @@
     </div>
   </section>
 
-  <!-- LIFT INSURANCE PANEL -->
-  <section class="container panel">
-    <h2>Lift Insurance</h2>
+  <!-- LIFT DETAILS -->
+  <section class="container panel" id="lift">
+    <h2>Lift Details</h2>
     <div class="cards">
       <div class="card">
-        <h3>Paid Status</h3>
-        <p class="big" id="lift-paid">—</p>
+        <h3>Insurance</h3>
+        <p class="small muted">Paid</p>
+        <p class="big" id="lift-ins-paid">—</p>
+        <p class="small muted">Valid Until</p>
+        <p class="big" id="lift-ins-valid">—</p>
       </div>
       <div class="card">
-        <h3>Valid Until</h3>
-        <p class="big" id="lift-valid">—</p>
+        <h3>AMC</h3>
+        <p class="small muted">Paid</p>
+        <p class="big" id="lift-amc-paid">—</p>
+        <p class="small muted">Valid Until</p>
+        <p class="big" id="lift-amc-valid">—</p>
       </div>
+    </div>
+  </section>
+
+  <!-- OPL -->
+  <section class="container panel" id="opl">
+    <h2>OPL (Open Points List)</h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Open Items</h3>
+        <p class="big" id="opl-open-count">—</p>
+      </div>
+      <div class="card">
+        <h3>Closed Items</h3>
+        <p class="big" id="opl-closed-count">—</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title / Issue</th>
+            <th>Apt</th>
+            <th>Status</th>
+            <th>Owner</th>
+            <th>Due</th>
+          </tr>
+        </thead>
+        <tbody id="opl-table"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="container panel" id="history">
+    <h2>History</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Event</th>
+            <th>Details</th>
+            <th>By</th>
+          </tr>
+        </thead>
+        <tbody id="history-table"></tbody>
+      </table>
     </div>
   </section>
 
@@ -107,6 +160,6 @@
     <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
   </footer>
 
-  <script src="script.js?v=10"></script>
+  <script src="script.js?v=12"></script>
 </body>
 </html>
