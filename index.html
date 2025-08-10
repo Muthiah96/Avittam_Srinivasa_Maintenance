@@ -9,54 +9,33 @@
 <body>
   <header class="hero">
     <div class="stripe"></div>
-    <h1>🏢 Avittam Srinivase Apartment Maintenance Portal</h1>
-    <!-- removed subtext per request -->
+    <h1>Avittam Srinivase Apartment Portal</h1>
   </header>
 
-  <!-- Colored Top Nav -->
+  <!-- Compact colored nav -->
   <nav class="topnav">
-    <a href="#maintenance">Maintenance</a>
-    <a href="#eb">EB</a>
-    <a href="#maid">Maid</a>
-    <a href="#lift">Lift Details</a>
+    <a href="#dashboard">Dashboard</a>
     <a href="#opl">OPL</a>
-    <a href="#balance">Balance & Expenses</a>
   </nav>
 
-  <!-- MAINTENANCE -->
-  <section class="container panel" id="maintenance">
-    <h2>Maintenance — <span id="dash-month"></span></h2>
-    <div class="cards">
-      <button class="card accent clickable" id="card-paid">
+  <!-- DASHBOARD (compact tile grid) -->
+  <section class="container panel" id="dashboard">
+    <h2>Dashboard — <span id="dash-month"></span></h2>
+
+    <div class="tile-grid">
+      <!-- Maintenance -->
+      <button class="card clickable" id="card-paid">
         <h3>Paid (Flats)</h3>
         <p class="big" id="paid-count">—</p>
-        <p class="small muted">Click to view which flats paid</p>
+        <p class="small muted">Tap to see who paid</p>
       </button>
-      <button class="card warn clickable" id="card-pending">
+      <button class="card clickable warn" id="card-pending">
         <h3>Pending (Flats)</h3>
         <p class="big" id="pending-count">—</p>
-        <p class="small muted">Click to view who’s due</p>
+        <p class="small muted">Tap to see who’s due</p>
       </button>
-    </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Apt</th>
-            <th>Maintenance Amount</th>
-            <th>Paid?</th>
-          </tr>
-        </thead>
-        <tbody id="apt-table-maint"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- EB -->
-  <section class="container panel" id="eb">
-    <h2>Electricity Board (EB) — <span id="dash-month-eb"></span></h2>
-    <div class="cards">
+      <!-- EB -->
       <div class="card">
         <h3>EB Amount (Common)</h3>
         <p class="big" id="eb-amount">—</p>
@@ -65,54 +44,78 @@
       <div class="card">
         <h3>EB Status</h3>
         <p class="big" id="eb-paid">—</p>
+        <p class="small muted">Month: <span id="dash-month-eb"></span></p>
       </div>
-    </div>
-  </section>
 
-  <!-- MAID -->
-  <section class="container panel" id="maid">
-    <h2>Maid — <span id="dash-month-maid"></span></h2>
-    <div class="cards">
+      <!-- Maid -->
       <div class="card">
         <h3>Maid Amount (This Month)</h3>
         <p class="big" id="maid-amount">—</p>
+        <p class="small muted">Month: <span id="dash-month-maid"></span></p>
       </div>
       <div class="card">
-        <h3>Leaves (This Month)</h3>
+        <h3>Maid Status</h3>
+        <p class="small muted">Leaves</p>
         <p class="big" id="maid-leaves">—</p>
-      </div>
-      <div class="card">
-        <h3>Payment (This Month)</h3>
+        <p class="small muted">Payment</p>
         <p class="big" id="maid-paid">—</p>
       </div>
-    </div>
-  </section>
 
-  <!-- LIFT DETAILS -->
-  <section class="container panel" id="lift">
-    <h2>Lift Details</h2>
-    <div class="cards">
-      <div class="card">
-        <h3>Insurance</h3>
+      <!-- Lift Details (expiry color-coded borders) -->
+      <div class="card tile-status" id="lift-ins-card">
+        <h3>Lift Insurance</h3>
         <p class="small muted">Paid</p>
         <p class="big" id="lift-ins-paid">—</p>
         <p class="small muted">Valid Until</p>
         <p class="big" id="lift-ins-valid">—</p>
+        <p class="small" id="lift-ins-days"></p>
       </div>
-      <div class="card">
-        <h3>AMC</h3>
+      <div class="card tile-status" id="lift-amc-card">
+        <h3>Lift AMC</h3>
         <p class="small muted">Paid</p>
         <p class="big" id="lift-amc-paid">—</p>
         <p class="small muted">Valid Until</p>
         <p class="big" id="lift-amc-valid">—</p>
+        <p class="small" id="lift-amc-days"></p>
+      </div>
+
+      <!-- Balance & Expenses -->
+      <div class="card accent">
+        <h3>Available Balance</h3>
+        <p class="big" id="bal-available">—</p>
+      </div>
+      <div class="card">
+        <h3>Total Balance (Σ)</h3>
+        <p class="big" id="bal-total">—</p>
+      </div>
+      <div class="card">
+        <h3>Total Expenses (Σ)</h3>
+        <p class="big" id="bal-expenses">—</p>
       </div>
     </div>
+
+    <!-- Maintenance details (collapsible to keep page short) -->
+    <details class="details">
+      <summary>Maintenance details (per flat)</summary>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Apt</th>
+              <th>Maintenance Amount</th>
+              <th>Paid?</th>
+            </tr>
+          </thead>
+          <tbody id="apt-table-maint"></tbody>
+        </table>
+      </div>
+    </details>
   </section>
 
-  <!-- OPL -->
+  <!-- OPL (compact) -->
   <section class="container panel" id="opl">
-    <h2>OPL (Open Points List)</h2>
-    <div class="cards">
+    <h2>OPL (Open Points)</h2>
+    <div class="tile-grid small">
       <div class="card">
         <h3>Open Items</h3>
         <p class="big" id="opl-open-count">—</p>
@@ -137,24 +140,8 @@
         <tbody id="opl-table"></tbody>
       </table>
     </div>
-  </section>
-
-  <!-- BALANCE & EXPENSES -->
-  <section class="container panel" id="balance">
-    <h2>Balance & Expenses</h2>
-    <div class="cards">
-      <div class="card accent">
-        <h3>Available Balance</h3>
-        <p class="big" id="bal-available">—</p>
-      </div>
-      <div class="card">
-        <h3>Total Balance (Σ)</h3>
-        <p class="big" id="bal-total">—</p>
-      </div>
-      <div class="card">
-        <h3>Total Expenses (Σ)</h3>
-        <p class="big" id="bal-expenses">—</p>
-      </div>
+    <div class="right">
+      <button id="opl-more">View full list</button>
     </div>
   </section>
 
@@ -162,16 +149,18 @@
     <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
   </footer>
 
-  <!-- Modal for Paid/Pending lists -->
+  <!-- Modal (used for Paid/Pending lists and OPL full list) -->
   <div id="modal" class="modal hidden" aria-hidden="true">
     <div class="modal-backdrop" id="modal-close"></div>
     <div class="modal-card">
       <button class="modal-x" id="modal-x" aria-label="Close">×</button>
       <h3 id="modal-title">Details</h3>
-      <ul id="modal-list"></ul>
+      <div id="modal-content">
+        <ul id="modal-list"></ul>
+      </div>
     </div>
   </div>
 
-  <script src="script.js?v=16"></script>
+  <script src="script.js?v=18"></script>
 </body>
 </html>
