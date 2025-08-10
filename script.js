@@ -6,7 +6,6 @@ const APTS = ["F1","F2","F3","S1","S2","T1","T2","T3"];
 document.getElementById("year").textContent = new Date().getFullYear();
 
 /* Header badge */
-const cacBadgeWrap = document.getElementById("cac-badge");
 const cacText = document.getElementById("cac-text");
 
 /* Month labels */
@@ -110,10 +109,11 @@ async function loadDashboard(){
   dashMonthMaid.textContent = monthLabel;
 
   try{
+    // normal call (server auto-falls back to latest month if needed)
     const res = await fetch(`${GAS_BASE_URL}?month=${month}&_=${Date.now()}`, { method:"GET", cache:"no-store" });
     const data = await res.json();
 
-    /* Common Area Controller (header, top-right) */
+    /* Common Area Controller */
     let cac = "—";
     if (Array.isArray(data.opl)){
       for (let i=data.opl.length-1; i>=0; i--){
@@ -127,7 +127,7 @@ async function loadDashboard(){
     }
     cacText.textContent = `Common Area Controller: ${cac}`;
 
-    /* Maintenance paid/pending + table */
+    /* Maintenance */
     const payments = Array.isArray(data.payments) ? data.payments : [];
     const paidSet = new Set(payments.filter(p=>p.maintPaid).map(p=>String(p.apartment||"").trim()));
     const pending = APTS.filter(a => !paidSet.has(a));
@@ -135,9 +135,11 @@ async function loadDashboard(){
     paidCountEl.textContent = String(paidSet.size);
     pendingCountEl.textContent = String(pending.length);
 
+    // click lists
     btnPaid.onclick = ()=> openModalHTML("Flats Paid", `<ul id="modal-list">${Array.from(paidSet).sort().map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
     btnPending.onclick = ()=> openModalHTML("Flats Pending (Due)", `<ul id="modal-list">${pending.map(x=>`<li>${x}</li>`).join("") || "<li>None</li>"}</ul>`);
 
+    // table
     if (tbodyMaint){
       tbodyMaint.innerHTML = "";
       APTS.forEach(apt => {
@@ -171,7 +173,7 @@ async function loadDashboard(){
     maidLeavesEl.textContent = data.maid?.leavesThisMonth ?? "0";
     maidPaidEl.textContent   = data.maid?.paidThisMonth ? "Paid" : "Not Paid";
 
-    /* Lift with expiry colors */
+    /* Lift colors */
     if (data.lift){
       const insDays = daysUntil(data.lift.insurance?.validUntil);
       liftInsPaidEl.textContent  = data.lift.insurance?.paid ? "Paid" : "Not Paid";
@@ -205,7 +207,7 @@ async function loadDashboard(){
       `;
       oplTableBody.appendChild(tr);
     });
-    oplMoreBtn.onclick = ()=>{
+    document.getElementById("opl-more").onclick = ()=>{
       const rows = [...openItems, ...closedItems];
       if (!rows.length){ openModalHTML("OPL — Full List", "<p class='small muted'>No items.</p>"); return; }
       let html = `<div class="table-wrap"><table><thead><tr>
@@ -225,7 +227,7 @@ async function loadDashboard(){
       openModalHTML("OPL — Full List", html);
     };
 
-    /* Balance (single row) */
+    /* Balance */
     const bal = data.balance || {};
     const total = Number(bal.totalBalance||0);
     const exp   = Number(bal.totalExpenses||0);
