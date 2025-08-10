@@ -1,5 +1,4 @@
 /* ====== CONFIG ====== */
-// Put your Apps Script Web App URL here:
 const GAS_BASE_URL = "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec";
 /* ==================== */
 
@@ -18,12 +17,10 @@ const tbody = document.getElementById("apt-table-body");
 const yearEl = document.getElementById("year");
 yearEl.textContent = new Date().getFullYear();
 
-function ym(d = new Date()) {
-  return d.toISOString().slice(0,7); // YYYY-MM
-}
+function ym(d = new Date()) { return d.toISOString().slice(0,7); } // YYYY-MM
 function prettyMonth(ymStr) {
   const [Y,M] = ymStr.split("-");
-  return new Date(parseInt(Y), parseInt(M)-1, 1).toLocaleString(undefined,{month:"long", year:"numeric"});
+  return new Date(+Y, +M-1, 1).toLocaleString(undefined,{month:"long", year:"numeric"});
 }
 
 async function loadDashboard() {
@@ -32,7 +29,7 @@ async function loadDashboard() {
   dashMonthEl2.textContent = prettyMonth(month);
 
   try {
-    const url = `${GAS_BASE_URL}?month=${month}&_=${Date.now()}`; // cache-bust
+    const url = `${GAS_BASE_URL}?month=${month}&_=${Date.now()}`;
     console.log("Fetching dashboard:", url);
     const res = await fetch(url, { method: "GET", cache: "no-store" });
     if (!res.ok) throw new Error("Failed to fetch dashboard");
@@ -52,7 +49,6 @@ async function loadDashboard() {
     ebPaidEl.textContent = (data.payments?.length && data.payments.every(r => r.ebPaid))
       ? "All Paid" : "Pending Exists";
 
-    // Table
     tbody.innerHTML = "";
     APTS.forEach(apt => {
       const row = (data.payments || []).find(p => p.apartment === apt) || {};
@@ -77,7 +73,7 @@ document.getElementById("req-form").addEventListener("submit", async (e) => {
   msg.textContent = "Submitting...";
 
   const form = e.target;
-  const fd = new FormData(form);            // **no headers** → simple POST (no CORS preflight)
+  const fd = new FormData(form);     // simple POST → no CORS preflight
   fd.append("timestamp", new Date().toISOString());
 
   try {
@@ -86,7 +82,7 @@ document.getElementById("req-form").addEventListener("submit", async (e) => {
     if (out && out.success) {
       msg.textContent = "Request submitted. You will receive updates via email.";
       form.reset();
-      loadDashboard(); // refresh if you want
+      loadDashboard();
     } else {
       msg.textContent = "Submission failed. Please try again.";
     }
