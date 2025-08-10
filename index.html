@@ -13,7 +13,7 @@
 
     <!-- Top-right badge with icon -->
     <div class="header-right">
-      <span id="cac-badge" class="badge-icon">
+      <span id="cac-badge" class="badge-icon" title="Common Area Controller">
         <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M3 5l9-3 9 3v6c0 5-3.8 9.7-9 11-5.2-1.3-9-6-9-11V5z" fill="currentColor"/>
         </svg>
@@ -22,144 +22,156 @@
     </div>
   </header>
 
-  <nav class="topnav">
+  <!-- Compact sticky nav -->
+  <nav class="topnav" role="navigation" aria-label="Primary">
     <a href="#dashboard">Dashboard</a>
     <a href="#opl">OPL</a>
   </nav>
 
-  <section class="container panel" id="dashboard">
-    <h2>Dashboard — <span id="dash-month"></span></h2>
+  <main class="container">
+    <!-- Two-column on desktop, single column on mobile -->
+    <section id="dashboard" class="panel">
+      <h2>Dashboard — <span id="dash-month"></span></h2>
 
-    <!-- Maintenance (stat rows with icon) -->
-    <div class="stat-group">
-      <h3><span class="emoji" aria-hidden="true">🔧</span>Maintenance</h3>
-      <div class="stat-list">
-        <button class="stat-item linklike" id="btn-paid" type="button">
-          <span>Paid (Flats)</span>
-          <strong id="paid-count">0</strong>
-        </button>
-        <button class="stat-item linklike" id="btn-pending" type="button">
-          <span>Pending (Flats)</span>
-          <strong id="pending-count">0</strong>
-        </button>
-      </div>
+      <div class="stat-columns">
+        <!-- Left column -->
+        <div class="col">
+          <!-- Maintenance -->
+          <div class="stat-group">
+            <h3><span class="emoji" aria-hidden="true">🔧</span>Maintenance</h3>
+            <div class="stat-list">
+              <button class="stat-item linklike" id="btn-paid" type="button">
+                <span>Paid (Flats)</span>
+                <strong id="paid-count">0</strong>
+              </button>
+              <button class="stat-item linklike" id="btn-pending" type="button">
+                <span>Pending (Flats)</span>
+                <strong id="pending-count">0</strong>
+              </button>
+            </div>
 
-      <details class="details">
-        <summary>Maintenance details (per flat)</summary>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Apt</th><th>Maintenance Amount</th><th>Paid?</th></tr>
-            </thead>
-            <tbody id="apt-table-maint"></tbody>
-          </table>
-        </div>
-      </details>
-    </div>
-
-    <!-- EB -->
-    <div class="stat-group">
-      <h3><span class="emoji" aria-hidden="true">⚡</span>EB</h3>
-      <div class="stat-list">
-        <div class="stat-item">
-          <span>Amount (Common)</span>
-          <strong id="eb-amount">—</strong>
-          <small id="eb-amount-note"></small>
-        </div>
-        <div class="stat-item">
-          <span>Status</span>
-          <strong id="eb-paid">—</strong>
-          <small>Month: <span id="dash-month-eb"></span></small>
-        </div>
-        <div class="stat-item">
-          <span>Next EB Period</span>
-          <strong id="eb-next">—</strong>
-        </div>
-      </div>
-    </div>
-
-    <!-- Maid -->
-    <div class="stat-group">
-      <h3><span class="emoji" aria-hidden="true">🧹</span>Maid</h3>
-      <div class="stat-list">
-        <div class="stat-item">
-          <span>Amount (This Month)</span>
-          <strong id="maid-amount">—</strong>
-          <small>Month: <span id="dash-month-maid"></span></small>
-        </div>
-        <div class="stat-item">
-          <span>Leaves</span>
-          <strong id="maid-leaves">—</strong>
-        </div>
-        <div class="stat-item">
-          <span>Payment</span>
-          <strong id="maid-paid">—</strong>
-        </div>
-      </div>
-    </div>
-
-    <!-- Lift (expiry-colored rows) -->
-    <div class="stat-group">
-      <h3><span class="emoji" aria-hidden="true">🛗</span>Lift Details</h3>
-      <div class="stat-list">
-        <div class="stat-item status" id="row-ins">
-          <div class="row-main">
-            <span>Insurance</span>
-            <strong id="lift-ins-paid">—</strong>
+            <details class="details">
+              <summary>Maintenance details (per flat)</summary>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Apt</th><th>Maintenance Amount</th><th>Paid?</th></tr>
+                  </thead>
+                  <tbody id="apt-table-maint"></tbody>
+                </table>
+              </div>
+            </details>
           </div>
-          <div class="row-sub">
-            <small>Valid Until</small>
-            <strong id="lift-ins-valid">—</strong>
-            <small id="lift-ins-days"></small>
+
+          <!-- Maid -->
+          <div class="stat-group">
+            <h3><span class="emoji" aria-hidden="true">🧹</span>Maid</h3>
+            <div class="stat-list">
+              <div class="stat-item">
+                <span>Amount (This Month)</span>
+                <strong id="maid-amount">—</strong>
+                <small>Month: <span id="dash-month-maid"></span></small>
+              </div>
+              <div class="stat-item">
+                <span>Leaves</span>
+                <strong id="maid-leaves">—</strong>
+              </div>
+              <div class="stat-item">
+                <span>Payment</span>
+                <strong id="maid-paid">—</strong>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="stat-item status" id="row-amc">
-          <div class="row-main">
-            <span>AMC</span>
-            <strong id="lift-amc-paid">—</strong>
+
+        <!-- Right column -->
+        <div class="col">
+          <!-- EB -->
+          <div class="stat-group">
+            <h3><span class="emoji" aria-hidden="true">⚡</span>EB</h3>
+            <div class="stat-list">
+              <div class="stat-item">
+                <span>Amount (Common)</span>
+                <strong id="eb-amount">—</strong>
+                <small id="eb-amount-note"></small>
+              </div>
+              <div class="stat-item">
+                <span>Status</span>
+                <strong id="eb-paid">—</strong>
+                <small>Month: <span id="dash-month-eb"></span></small>
+              </div>
+              <div class="stat-item">
+                <span>Next EB Period</span>
+                <strong id="eb-next">—</strong>
+              </div>
+            </div>
           </div>
-          <div class="row-sub">
-            <small>Valid Until</small>
-            <strong id="lift-amc-valid">—</strong>
-            <small id="lift-amc-days"></small>
+
+          <!-- Lift (expiry colored) -->
+          <div class="stat-group">
+            <h3><span class="emoji" aria-hidden="true">🛗</span>Lift Details</h3>
+            <div class="stat-list">
+              <div class="stat-item status" id="row-ins">
+                <div class="row-main">
+                  <span>Insurance</span>
+                  <strong id="lift-ins-paid">—</strong>
+                </div>
+                <div class="row-sub">
+                  <small>Valid Until</small>
+                  <strong id="lift-ins-valid">—</strong>
+                  <small id="lift-ins-days"></small>
+                </div>
+              </div>
+              <div class="stat-item status" id="row-amc">
+                <div class="row-main">
+                  <span>AMC</span>
+                  <strong id="lift-amc-paid">—</strong>
+                </div>
+                <div class="row-sub">
+                  <small>Valid Until</small>
+                  <strong id="lift-amc-valid">—</strong>
+                  <small id="lift-amc-days"></small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Balance (opens Sheet) -->
+          <div class="stat-group">
+            <h3><span class="emoji" aria-hidden="true">💰</span>Balance</h3>
+            <div class="stat-list">
+              <a class="stat-item linklike" id="link-balance" href="https://docs.google.com/spreadsheets/d/1vGhGbTScu8bdkP2xLb31vuPYKfjv_E6aKCqYwGAHcN0/edit" target="_blank" rel="noopener">
+                <span>Available (Total − Expenses)</span>
+                <strong id="bal-available">—</strong>
+                <small>Total: <span id="bal-total-inline">—</span> • Expenses: <span id="bal-expenses-inline">—</span></small>
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Balance (single row, link to Sheet) -->
-    <div class="stat-group">
-      <h3><span class="emoji" aria-hidden="true">💰</span>Balance</h3>
-      <div class="stat-list">
-        <a class="stat-item linklike" id="link-balance" href="https://docs.google.com/spreadsheets/d/1vGhGbTScu8bdkP2xLb31vuPYKfjv_E6aKCqYwGAHcN0/edit" target="_blank" rel="noopener">
-          <span>Available (Total − Expenses)</span>
-          <strong id="bal-available">—</strong>
-          <small>Total: <span id="bal-total-inline">—</span> • Expenses: <span id="bal-expenses-inline">—</span></small>
-        </a>
+    <!-- OPL -->
+    <section class="panel" id="opl">
+      <h2>OPL (Open Points)</h2>
+      <div class="stat-list two">
+        <div class="stat-item"><span>Open Items</span><strong id="opl-open-count">—</strong></div>
+        <div class="stat-item"><span>Closed Items</span><strong id="opl-closed-count">—</strong></div>
       </div>
-    </div>
-  </section>
 
-  <!-- OPL -->
-  <section class="container panel" id="opl">
-    <h2>OPL (Open Points)</h2>
-    <div class="stat-list two">
-      <div class="stat-item"><span>Open Items</span><strong id="opl-open-count">—</strong></div>
-      <div class="stat-item"><span>Closed Items</span><strong id="opl-closed-count">—</strong></div>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th>ID</th><th>Title / Issue</th><th>Status</th><th>Apt</th><th>Remarks</th></tr>
-        </thead>
-        <tbody id="opl-table"></tbody>
-      </table>
-    </div>
-    <div class="right">
-      <button id="opl-more" type="button">View full list</button>
-    </div>
-  </section>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Title / Issue</th><th>Status</th><th>Apt</th><th>Remarks</th></tr>
+          </thead>
+          <tbody id="opl-table"></tbody>
+        </table>
+      </div>
+      <div class="right">
+        <button id="opl-more" type="button">View full list</button>
+      </div>
+    </section>
+  </main>
 
   <footer>
     <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
@@ -175,6 +187,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=25"></script>
+  <!-- Your existing JS works as-is; version bump to refresh -->
+  <script src="script.js?v=26"></script>
 </body>
 </html>
