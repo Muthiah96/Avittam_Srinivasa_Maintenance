@@ -1,35 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apartment Maintenance Portal</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Avittam Srinivase Apartment Maintenance Portal</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <header>
-        <h1>🏢 Apartment Maintenance Portal</h1>
-        <p>Submit and track your maintenance requests easily</p>
-    </header>
+  <header class="hero">
+    <h1>🏢 Avittam Srinivase Apartment Maintenance Portal</h1>
+    <p>Submit issues, check monthly payments, and view maid & EB status</p>
+  </header>
 
-    <section class="form-section">
-        <h2>Submit Maintenance Request</h2>
-        <form>
-            <label for="name">Full Name:</label>
-            <input type="text" id="name" placeholder="Your Name" required>
+  <!-- DASHBOARD -->
+  <section class="container">
+    <h2>Dashboard — <span id="dash-month"></span></h2>
+    <div class="cards">
+      <div class="card">
+        <h3>Paid (Maintenance)</h3>
+        <p class="big" id="paid-count">—</p>
+      </div>
+      <div class="card">
+        <h3>Pending (Maintenance)</h3>
+        <p class="big" id="pending-count">—</p>
+      </div>
+      <div class="card">
+        <h3>Maid Today</h3>
+        <p class="big" id="maid-today">—</p>
+      </div>
+      <div class="card">
+        <h3>Maid Leaves (This Month)</h3>
+        <p class="big" id="maid-leaves">—</p>
+      </div>
+      <div class="card">
+        <h3>Maid Payment (This Month)</h3>
+        <p class="big" id="maid-paid">—</p>
+      </div>
+      <div class="card">
+        <h3>EB Bill (This Month)</h3>
+        <p class="small" id="eb-amount">—</p>
+        <p class="big" id="eb-paid">—</p>
+      </div>
+    </div>
+  </section>
 
-            <label for="apartment">Apartment Number:</label>
-            <input type="text" id="apartment" placeholder="A-101" required>
+  <!-- PER-APARTMENT STATUS -->
+  <section class="container">
+    <h2>Apartment Status — <span id="dash-month-2"></span></h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Apt</th>
+            <th>Maintenance Amount</th>
+            <th>Paid?</th>
+            <th>EB Amount</th>
+            <th>EB Paid?</th>
+          </tr>
+        </thead>
+        <tbody id="apt-table-body">
+          <!-- populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-            <label for="issue">Issue Description:</label>
-            <textarea id="issue" placeholder="Describe the problem..." required></textarea>
+  <!-- MAINTENANCE REQUEST FORM -->
+  <section class="container">
+    <h2>Submit Maintenance Request</h2>
+    <form id="req-form">
+      <div class="grid">
+        <label>
+          Full Name
+          <input type="text" name="name" placeholder="Your Name" required />
+        </label>
+        <label>
+          Apartment
+          <select name="apartment" required>
+            <option value="">Select</option>
+            <option>F1</option><option>F2</option><option>F3</option>
+            <option>S1</option><option>S2</option>
+            <option>T1</option><option>T2</option><option>T3</option>
+          </select>
+        </label>
+      </div>
 
-            <button type="submit">Submit Request</button>
-        </form>
-    </section>
+      <label>
+        Contact Email (for updates)
+        <input type="email" name="email" placeholder="you@example.com" />
+      </label>
 
-    <footer>
-        <p>© 2025 Apartment Maintenance | Contact: support@example.com</p>
-    </footer>
+      <label>
+        Contact Number (optional)
+        <input type="tel" name="phone" placeholder="+65 xxx xxxx" />
+      </label>
+
+      <label>
+        Issue Description
+        <textarea name="issue" rows="4" placeholder="Describe the issue..." required></textarea>
+      </label>
+
+      <button type="submit">Submit Request</button>
+      <p id="form-msg" class="muted"></p>
+    </form>
+  </section>
+
+  <footer>
+    <p>© <span id="year"></span> Avittam Srinivase Apartment Association</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
