@@ -5,8 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Avittam Srinivasa Apartment Portal</title>
 
-  <!-- (Optional) your stylesheet -->
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
   <meta name="theme-color" content="#f59e0b" />
 </head>
 <body>
@@ -38,13 +37,17 @@
     </nav>
 
     <!-- Error bar (hidden by default) -->
-    <div id="error" class="error-banner hidden"></div>
+    <div id="error" class="error-banner hidden" role="alert"></div>
 
-    <main class="container">
-      <section id="dashboard" class="panel">
-        <h2>Dashboard — <span id="dash-month"></span></h2>
+    <main class="container" role="main">
+      <!-- Dashboard -->
+      <section id="dashboard" class="panel" aria-labelledby="dashboard-title">
+        <h2 id="dashboard-title">
+          Dashboard — <span id="dash-month"></span>
+        </h2>
 
         <div class="stat-columns">
+          <!-- Column 1 -->
           <div class="col">
             <!-- Maintenance -->
             <div class="stat-group">
@@ -53,10 +56,12 @@
                 <button class="stat-item linklike" id="btn-paid" type="button">
                   <span>Paid (Flats)</span>
                   <strong id="paid-count">0</strong>
+                  <small>Click to view list</small>
                 </button>
                 <button class="stat-item linklike" id="btn-pending" type="button">
                   <span>Pending (Flats)</span>
                   <strong id="pending-count">0</strong>
+                  <small>Click to view list</small>
                 </button>
               </div>
 
@@ -65,7 +70,11 @@
                 <div class="table-wrap">
                   <table>
                     <thead>
-                      <tr><th>Apt</th><th>Maintenance Amount</th><th>Paid?</th></tr>
+                      <tr>
+                        <th>Apt</th>
+                        <th>Maintenance Amount</th>
+                        <th>Paid?</th>
+                      </tr>
                     </thead>
                     <tbody id="apt-table-maint"></tbody>
                   </table>
@@ -94,6 +103,7 @@
             </div>
           </div>
 
+          <!-- Column 2 -->
           <div class="col">
             <!-- EB -->
             <div class="stat-group">
@@ -149,10 +159,19 @@
             <div class="stat-group">
               <h3><span class="emoji">💰</span>Balance</h3>
               <div class="stat-list">
-                <a class="stat-item linklike" id="link-balance" href="https://docs.google.com/spreadsheets/d/1vGhGbTScu8bdkP2xLb31vuPYKfjv_E6aKCqYwGAHcN0/edit" target="_blank" rel="noopener">
+                <a
+                  class="stat-item linklike"
+                  id="link-balance"
+                  href="https://docs.google.com/spreadsheets/d/1vGhGbTScu8bdkP2xLb31vuPYKfjv_E6aKCqYwGAHcN0/edit"
+                  target="_blank"
+                  rel="noopener"
+                >
                   <span>Available (Total − Expenses)</span>
                   <strong id="bal-available">—</strong>
-                  <small>Total: <span id="bal-total-inline">—</span> • Expenses: <span id="bal-expenses-inline">—</span></small>
+                  <small>
+                    Total: <span id="bal-total-inline">—</span>
+                    • Expenses: <span id="bal-expenses-inline">—</span>
+                  </small>
                 </a>
               </div>
             </div>
@@ -161,17 +180,30 @@
       </section>
 
       <!-- OPL -->
-      <section class="panel" id="opl">
-        <h2>OPL (Open Points)</h2>
+      <section class="panel" id="opl" aria-labelledby="opl-title">
+        <h2 id="opl-title">OPL (Open Points)</h2>
+
         <div class="stat-list two">
-          <div class="stat-item"><span>Open Items</span><strong id="opl-open-count">—</strong></div>
-          <div class="stat-item"><span>Closed Items</span><strong id="opl-closed-count">—</strong></div>
+          <div class="stat-item">
+            <span>Open Items</span>
+            <strong id="opl-open-count">—</strong>
+          </div>
+          <div class="stat-item">
+            <span>Closed Items</span>
+            <strong id="opl-closed-count">—</strong>
+          </div>
         </div>
 
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>ID</th><th>Title / Issue</th><th>Status</th><th>Apt</th><th>Remarks</th></tr>
+              <tr>
+                <th>ID</th>
+                <th>Title / Issue</th>
+                <th>Status</th>
+                <th>Apt</th>
+                <th>Remarks</th>
+              </tr>
             </thead>
             <tbody id="opl-table"></tbody>
           </table>
@@ -187,17 +219,19 @@
     </footer>
 
     <!-- Modal -->
-    <div id="modal" class="modal hidden" aria-hidden="true">
+    <div id="modal" class="modal hidden" aria-hidden="true" role="dialog" aria-modal="true">
       <div class="modal-backdrop" id="modal-close"></div>
       <div class="modal-card">
         <button class="modal-x" id="modal-x" aria-label="Close">×</button>
         <h3 id="modal-title">Details</h3>
-        <div id="modal-content"><ul id="modal-list"></ul></div>
+        <div id="modal-content">
+          <ul id="modal-list"></ul>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Your JS -->
-  <script src="script.js?v=40"></script>
+  <!-- JS -->
+  <script src="script.js?v=41"></script>
 </body>
 </html>
