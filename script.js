@@ -1,539 +1,378 @@
-/***** ====== CONFIG ====== *****/
-const ADMIN_EMAIL = "muralidharan.vtmt96@gmail.com";
-const SS_ID = "1vGhGbTScu8bdkP2xLb31vuPYKfjv_E6aKCqYwGAHcN0";
-/***** ===================== *****/
+/* ====== CONFIG ====== */
+const GAS_BASE_URL =
+  "https://script.google.com/macros/s/AKfycbyblwpOPq_hWkYJFZvBbZABJtHRCFYOaWZZ05HuuFmz5Onb8C1d9nGD2JXzwG-CGawPdw/exec";
+/* ==================== */
 
-const VERSION = "v28";
-const TZ = Session.getScriptTimeZone();
+const APTS = ["F1", "F2", "F3", "S1", "S2", "T1", "T2", "T3"];
+document.getElementById("year").textContent = new Date().getFullYear();
 
-/** Spreadsheet helpers */
-function ss() {
-  return SpreadsheetApp.openById(SS_ID);
-}
-function sheet(name) {
-  const s = ss().getSheetByName(name);
-  if (s) return s;
-  const target = String(name || "")
-    .trim()
-    .toLowerCase();
-  return (
-    ss()
-      .getSheets()
-      .find((sh) => sh.getName().trim().toLowerCase() === target) || null
-  );
-}
+/* ---------- Helpers ---------- */
+// Safe text write + Indian number format
+const setText = (id, val) => {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+  else console.warn("Missing element:", id);
+};
+const fmtINR = (n) => {
+  const x = Number(n);
+  return Number.isFinite(x) ? x.toLocaleString("en-IN") : "0";
+};
 
-/** Utils */
-function yymm(d) {
-  return Utilities.formatDate(d || new Date(), TZ, "yyyy-MM");
+/* Loader/Error */
+const appEl = document.getElementById("app");
+const loaderEl = document.getElementById("loader");
+const errorEl = document.getElementById("error");
+function showLoader() {
+  loaderEl.classList.remove("hidden");
+  appEl.classList.add("hidden");
 }
-function todayYMD() {
-  return Utilities.formatDate(new Date(), TZ, "yyyy-MM-dd");
+function hideLoader() {
+  loaderEl.classList.add("hidden");
+  appEl.classList.remove("hidden");
 }
-function normalizeMonthCell(v) {
-  if (v instanceof Date) return Utilities.formatDate(v, TZ, "yyyy-MM");
-  const raw = String(v || "").trim();
-  if (!raw) return "";
-  let m = raw.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/);
-  if (m) return `${m[1]}-${("0" + m[2]).slice(-2)}`;
-  m = raw.match(/^(\d{4})[-\/.](\d{1,2})$/);
-  if (m) return `${m[1]}-${("0" + m[2]).slice(-2)}`;
-  m = raw.match(/^(\d{4})(\d{2})$/);
-  if (m) return `${m[1]}-${m[2]}`;
-  m = raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
-  if (m) return `${m[3]}-${("0" + m[2]).slice(-2)}`;
-  return raw;
-}
-function toNum(v) {
-  return typeof v === "number"
-    ? v
-    : Number(String(v).replace(/[^\d.-]/g, "")) || 0;
-}
-function toBool(v) {
-  if (v === true || v === false) return v;
-  const s = String(v || "")
-    .trim()
-    .toLowerCase();
-  return s === "true" || s === "yes" || s === "y" || s === "1";
+function showError(msg) {
+  if (!errorEl) return;
+  errorEl.textContent = msg;
+  errorEl.classList.remove("hidden");
 }
 
-/** ====== API ====== */
-function doGet(e) {
-  const reqMonth = normalizeMonthCell(
-    (e && e.parameter && e.parameter.month) || yymm(new Date())
-  );
+/* Month labels */
+const dashMonthEl = document.getElementById("dash-month");
+const dashMonthEB = document.getElementById("dash-month-eb");
+const dashMonthMaid = document.getElementById("dash-month-maid");
 
-  // Debug endpoints
-  if (e && e.parameter && e.parameter.debugPayments === "1") {
-    return ContentService.createTextOutput(
-      JSON.stringify(paymentsDebug(reqMonth))
-    ).setMimeType(ContentService.MimeType.JSON);
+/* CAC pill */
+const cacText = document.getElementById("cac-text");
+
+/* Maintenance */
+const paidCountEl = document.getElementById("paid-count");
+const pendingCountEl = document.getElementById("pending-count");
+const tbodyMaint = document.getElementById("apt-table-maint");
+const btnPaid = document.getElementById("btn-paid");
+const btnPending = document.getElementById("btn-pending");
+
+/* EB */
+const ebAmountEl = document.getElementById("eb-amount");
+const ebAmountNoteEl = document.getElementById("eb-amount-note");
+const ebPaidEl = document.getElementById("eb-paid");
+const ebNextEl = document.getElementById("eb-next");
+
+/* Sweeper */
+const maidAmountEl = document.getElementById("maid-amount");
+const maidLeavesEl = document.getElementById("maid-leaves");
+const maidPaidEl = document.getElementById("maid-paid");
+
+/* Lift */
+const rowIns = document.getElementById("row-ins");
+const rowAmc = document.getElementById("row-amc");
+const liftInsPaidEl = document.getElementById("lift-ins-paid");
+const liftInsValidEl = document.getElementById("lift-ins-valid");
+const liftInsDaysEl = document.getElementById("lift-ins-days");
+const liftAmcPaidEl = document.getElementById("lift-amc-paid");
+const liftAmcValidEl = document.getElementById("lift-amc-valid");
+const liftAmcDaysEl = document.getElementById("lift-amc-days");
+
+/* OPL */
+const oplOpenCountEl = document.getElementById("opl-open-count");
+const oplClosedCountEl = document.getElementById("opl-closed-count");
+const oplTableBody = document.getElementById("opl-table");
+const oplMoreBtn = document.getElementById("opl-more");
+
+/* Modal */
+const modal = document.getElementById("modal");
+const modalClose = document.getElementById("modal-close");
+const modalX = document.getElementById("modal-x");
+const modalTitle = document.getElementById("modal-title");
+const modalContent = document.getElementById("modal-content");
+
+function openModalHTML(title, html) {
+  modalTitle.textContent = title;
+  modalContent.innerHTML = html;
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+}
+function closeModal() {
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+}
+if (modalClose) modalClose.addEventListener("click", closeModal);
+if (modalX) modalX.addEventListener("click", closeModal);
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeModal();
+});
+
+/* ---------- Date helpers ---------- */
+function parseDateFlexible(s) {
+  if (!s) return null;
+  if (s instanceof Date) return s;
+  const t = String(s).trim(),
+    d1 = new Date(t);
+  if (!isNaN(d1)) return d1;
+  let m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+  if (m) {
+    const d = new Date(+m[3], +m[2] - 1, +m[1]);
+    if (!isNaN(d)) return d;
   }
-  if (e && e.parameter && e.parameter.debugMaid === "1") {
-    return ContentService.createTextOutput(
-      JSON.stringify(maidDebug(reqMonth))
-    ).setMimeType(ContentService.MimeType.JSON);
+  m = t.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
+  if (m) {
+    const d = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (!isNaN(d)) return d;
   }
-
-  const payments = readPayments(reqMonth);
-  const eb = summarizeEB(payments);
-  const maid = readMaid(reqMonth);
-  const lift = readLiftDetails(reqMonth);
-  const opl = readOPL();
-  const balance = readBalanceExpenses();
-
-  const paidCount = payments.filter((r) => r.maintPaid).length;
-  const maintenance = {
-    paidCount,
-    pendingCount: Math.max(0, 8 - paidCount),
-    totalFlats: 8,
-  };
-
-  const out = {
-    version: VERSION,
-    month: reqMonth,
-    payments,
-    maintenance,
-    eb,
-    maid,
-    lift,
-    opl,
-    balance,
-  };
-  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(
-    ContentService.MimeType.JSON
-  );
+  return null;
+}
+function daysUntil(dateString) {
+  const d = parseDateFlexible(dateString);
+  if (!d) return null;
+  const ms = d.setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0);
+  return Math.floor(ms / 86400000);
+}
+function setStatusColor(el, days) {
+  el.classList.remove("ok", "warn", "bad");
+  if (days === null) return;
+  if (days < 0) el.classList.add("bad");
+  else if (days <= 40) el.classList.add("warn");
+  else el.classList.add("ok");
 }
 
-function doPost(e) {
+/* EB window: 15.09.2025–22.09.2025, then +2 months; show next >= today */
+function ddmmyyyy(d) {
+  return `${String(d.getDate()).padStart(2, "0")}.${String(
+    d.getMonth() + 1
+  ).padStart(2, "0")}.${d.getFullYear()}`;
+}
+function addMonths(date, n) {
+  const d = new Date(date.getTime());
+  d.setMonth(d.getMonth() + n);
+  return d;
+}
+function nextEbWindow() {
+  const baseStart = new Date(2025, 8, 15); // Sep
+  const baseEnd = new Date(2025, 8, 22);
+  const today = new Date();
+  let i = 0,
+    s = baseStart,
+    e = baseEnd;
+  while (e < today && i < 100) {
+    i++;
+    s = addMonths(baseStart, i * 2);
+    e = addMonths(baseEnd, i * 2);
+  }
+  return `${ddmmyyyy(s)} ➜ ${ddmmyyyy(e)}`;
+}
+
+/* ---------- Main load ---------- */
+async function loadDashboard() {
+  showLoader();
+
+  const requested = new Date().toISOString().slice(0, 7);
   try {
-    let data = {};
-    if (e && e.parameter && Object.keys(e.parameter).length) data = e.parameter;
-    else if (e && e.postData && e.postData.contents) {
-      try {
-        data = JSON.parse(e.postData.contents);
-      } catch (_) {}
-    }
+    const res = await fetch(
+      `${GAS_BASE_URL}?month=${requested}&_=${Date.now()}`,
+      { method: "GET", cache: "no-store" }
+    );
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
 
-    const ts = new Date();
-    const month = yymm(ts);
-    const sh = sheet("Requests") || ss().insertSheet("Requests");
-    if (sh.getLastRow() === 0) {
-      sh.appendRow([
-        "Timestamp",
-        "Name",
-        "Apartment",
-        "Email",
-        "Phone",
-        "Issue",
-        "Month",
-      ]);
-    }
-    sh.appendRow([
-      ts,
-      data.name || "",
-      data.apartment || "",
-      data.email || "",
-      data.phone || "",
-      data.issue || "",
-      month,
-    ]);
+    const monthUsed = data.month || requested;
+    const monthLabel = new Date(monthUsed + "-01").toLocaleString(undefined, {
+      month: "long",
+      year: "numeric",
+    });
+    setText("dash-month", monthLabel);
+    setText("dash-month-eb", monthLabel);
+    setText("dash-month-maid", monthLabel);
 
-    if (ADMIN_EMAIL) {
-      MailApp.sendEmail({
-        to: ADMIN_EMAIL,
-        subject: `[Maintenance] ${data.apartment || "Apartment"} - New Request`,
-        htmlBody: `<p><b>New Maintenance Request</b></p>
-          <p><b>Name:</b> ${data.name || ""}<br/>
-          <b>Apartment:</b> ${data.apartment || ""}<br/>
-          <b>Email:</b> ${data.email || ""}<br/>
-          <b>Phone:</b> ${data.phone || ""}<br/>
-          <b>Issue:</b> ${data.issue || ""}<br/>
-          <b>Time:</b> ${ts}</p>`,
+    /* CAC pill (from OPL remarks/title) */
+    let cac = "—";
+    if (Array.isArray(data.opl)) {
+      for (let i = data.opl.length - 1; i >= 0; i--) {
+        const r = data.opl[i];
+        const t = String(r.title || "").toLowerCase();
+        const rem = String(r.remarks || "").toLowerCase();
+        if (
+          t.includes("common area controller") ||
+          rem.includes("common area controller")
+        ) {
+          cac = r.apartment || r.remarks || r.title;
+          break;
+        }
+      }
+    }
+    setText("cac-text", `Common Area Controller: ${cac}`);
+
+    /* Maintenance */
+    const payments = Array.isArray(data.payments) ? data.payments : [];
+    const paidSet = new Set(
+      payments
+        .filter((p) => p.maintPaid)
+        .map((p) =>
+          String(p.apartment || "")
+            .trim()
+            .toUpperCase()
+        )
+    );
+    const pending = APTS.filter((a) => !paidSet.has(a));
+
+    setText("paid-count", paidSet.size);
+    setText("pending-count", pending.length);
+
+    btnPaid.onclick = () =>
+      openModalHTML(
+        "Flats Paid",
+        `<ul id="modal-list">${
+          Array.from(paidSet)
+            .sort()
+            .map((x) => `<li>${x}</li>`)
+            .join("") || "<li>None</li>"
+        }</ul>`
+      );
+    btnPending.onclick = () =>
+      openModalHTML(
+        "Flats Pending (Due)",
+        `<ul id="modal-list">${
+          pending.map((x) => `<li>${x}</li>`).join("") || "<li>None</li>"
+        }</ul>`
+      );
+
+    if (tbodyMaint) {
+      tbodyMaint.innerHTML = "";
+      APTS.forEach((apt) => {
+        const row =
+          payments.find((p) => String(p.apartment).toUpperCase() === apt) || {};
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${apt}</td>
+          <td>${row.maintAmount ?? "-"}</td>
+          <td class="${row.maintPaid ? "ok" : "warn"}">${
+          row.maintPaid ? "Yes" : "No"
+        }</td>
+        `;
+        tbodyMaint.appendChild(tr);
       });
     }
 
-    return ContentService.createTextOutput(
-      JSON.stringify({ success: true })
-    ).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(
-      JSON.stringify({ success: false, error: String(err) })
-    ).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-/** ====== Readers ====== */
-
-/* Payments (ultra-robust, typed + display, header-aware)
-   Accepts any header order/casing; trims spaces; handles TRUE/FALSE as text or booleans.
-   Columns expected somewhere in row 1: Month, Apartment, MaintAmount, MaintPaid, EBAmount, EBPaid
-*/
-function readPayments(month) {
-  const sh = sheet("Payments");
-  if (!sh) return [];
-
-  const range = sh.getDataRange();
-  const values = range.getValues(); // typed (booleans/numbers/dates)
-  const display = range.getDisplayValues(); // what you see
-
-  if (values.length < 2) return [];
-
-  const headersDisp = display[0].map((h) => String(h || ""));
-  const H = headersDisp.map((h) =>
-    h.toLowerCase().replace(/\s+|\(|\)|\[|\]|\/|\\/g, "")
-  );
-
-  const idx = {
-    month: H.findIndex((h) => h.includes("month")),
-    apt: H.findIndex(
-      (h) => h.includes("apartment") || h === "apt" || h.includes("flat")
-    ),
-    mAmt: H.findIndex(
-      (h) => h.includes("maintamount") || h.includes("maintenanceamount")
-    ),
-    mPaid: H.findIndex((h) => h.includes("maintpaid")),
-    ebAmt: H.findIndex((h) => h.includes("ebamount")),
-    ebPaid: H.findIndex((h) => h.includes("ebpaid")),
-  };
-  // Fallback to classic A..F if headers missed
-  if (idx.month < 0) idx.month = 0;
-  if (idx.apt < 0) idx.apt = 1;
-  if (idx.mAmt < 0) idx.mAmt = 2;
-  if (idx.mPaid < 0) idx.mPaid = 3;
-  if (idx.ebAmt < 0) idx.ebAmt = 4;
-  if (idx.ebPaid < 0) idx.ebPaid = 5;
-
-  const out = [];
-  for (let r = 1; r < values.length; r++) {
-    const vMonth = values[r][idx.month];
-    const dMonth = display[r][idx.month];
-    const vApt = values[r][idx.apt];
-    const dApt = display[r][idx.apt];
-    const vMAmt = values[r][idx.mAmt];
-    const dMAmt = display[r][idx.mAmt];
-    const vMPaid = values[r][idx.mPaid];
-    const dMPaid = display[r][idx.mPaid];
-    const vEAmt = values[r][idx.ebAmt];
-    const dEAmt = display[r][idx.ebAmt];
-    const vEPaid = values[r][idx.ebPaid];
-    const dEPaid = display[r][idx.ebPaid];
-
-    const monthNorm = normalizeMonthCell(vMonth !== "" ? vMonth : dMonth);
-    if (monthNorm !== month) continue;
-
-    const apartment = String((vApt !== "" && vApt != null ? vApt : dApt) || "")
-      .trim()
-      .toUpperCase();
-
-    const maintAmount = typeof vMAmt === "number" ? vMAmt : toNum(dMAmt);
-    const ebAmount = typeof vEAmt === "number" ? vEAmt : toNum(dEAmt);
-
-    const maintPaid = typeof vMPaid === "boolean" ? vMPaid : toBool(dMPaid);
-    const ebPaid = typeof vEPaid === "boolean" ? vEPaid : toBool(dEPaid);
-
-    if (!apartment) continue;
-    out.push({ apartment, maintAmount, maintPaid, ebAmount, ebPaid });
-  }
-
-  return out;
-}
-
-function summarizeEB(payments) {
-  const amounts = Array.from(
-    new Set(
-      (payments || []).map((p) => Number(p.ebAmount) || 0).filter((v) => v > 0)
-    )
-  );
-  let amountCommon = null,
-    note = "";
-  if (amounts.length === 1) amountCommon = amounts[0];
-  else if (amounts.length > 1)
-    note = "Varies by flat; set a single common amount in Sheet.";
-  const allPaid = (payments || []).length
-    ? payments.every((p) => p.ebPaid)
-    : false;
-  return { amountCommon, allPaid, note };
-}
-
-/* Maid (Sweeper)
-   Columns: Date | Leaves | Came | Month | Paid | Amount
-*/
-function readMaid(month) {
-  const sh = sheet("Maid");
-  if (!sh)
-    return { amountThisMonth: null, leavesThisMonth: 0, paidThisMonth: false };
-
-  const values = sh.getDataRange().getValues();
-  if (values.length < 2)
-    return { amountThisMonth: null, leavesThisMonth: 0, paidThisMonth: false };
-
-  const headers = values[0].map((h) => String(h || ""));
-  const rows = values.slice(1);
-  const norm = (s) => s.toLowerCase().replace(/\s+|\(|\)|\[|\]|\/|\\/g, "");
-  const H = headers.map(norm);
-
-  const idx = {
-    date: H.findIndex((h) => h.includes("date")),
-    leaves: H.findIndex((h) => h.includes("leave")),
-    came: H.findIndex((h) => h.includes("came")),
-    month: H.findIndex((h) => h.includes("month")),
-    paid: H.findIndex((h) => h.includes("paid") || h.includes("status")),
-    amount: H.findIndex((h) => h.includes("amount")),
-  };
-  if (idx.date < 0) idx.date = 0;
-  if (idx.leaves < 0) idx.leaves = 1;
-  if (idx.came < 0) idx.came = 2;
-  if (idx.month < 0) idx.month = 3;
-  if (idx.paid < 0) idx.paid = 4;
-  if (idx.amount < 0) idx.amount = 5;
-
-  const rowMonth = (r) => {
-    const m = normalizeMonthCell(r[idx.month]);
-    if (m) return m;
-    const d = r[idx.date];
-    if (d instanceof Date) return Utilities.formatDate(d, TZ, "yyyy-MM");
-    const s = String(d || "");
-    const mm = s.match(/^(\d{4})[-\/.](\d{1,2})/);
-    return mm ? `${mm[1]}-${("0" + mm[2]).slice(-2)}` : "";
-  };
-
-  const monthRows = rows.filter((r) => rowMonth(r) === month);
-
-  let leavesThisMonth = 0;
-  if (monthRows.length) {
-    if (idx.leaves >= 0) {
-      leavesThisMonth = monthRows.reduce(
-        (sum, r) =>
-          sum +
-          (typeof r[idx.leaves] === "number"
-            ? r[idx.leaves]
-            : toNum(r[idx.leaves])),
-        0
-      );
+    /* EB – using data.eb from backend */
+    const eb = data.eb || {};
+    if (typeof eb.amountCommon === "number") {
+      setText("eb-amount", eb.amountCommon);
+      setText("eb-amount-note", eb.period ? `Period: ${eb.period}` : "");
+    } else if (eb.note) {
+      setText("eb-amount", "—");
+      setText("eb-amount-note", eb.note);
     } else {
-      leavesThisMonth = monthRows.filter((r) => !toBool(r[idx.came])).length;
+      setText("eb-amount", "—");
+      setText("eb-amount-note", "");
     }
-  }
 
-  let paidThisMonth = false;
-  let amountThisMonth = null;
-  for (let i = monthRows.length - 1; i >= 0; i--) {
-    const pv = monthRows[i][idx.paid];
-    if (pv !== "" && pv !== null) {
-      paidThisMonth = toBool(pv);
-      break;
+    const allEbPaid = typeof eb.allPaid === "boolean" ? eb.allPaid : false;
+    setText("eb-paid", allEbPaid ? "Paid" : "Not Paid");
+    setText("eb-next", eb.period || nextEbWindow());
+
+    /* Sweeper */
+    setText(
+      "maid-amount",
+      data.maid && typeof data.maid.amountThisMonth === "number"
+        ? data.maid.amountThisMonth
+        : "—"
+    );
+    setText("maid-leaves", data.maid?.leavesThisMonth ?? "0");
+    setText("maid-paid", data.maid?.paidThisMonth ? "Paid" : "Not Paid");
+
+    /* Lift */
+    if (data.lift) {
+      const insDays = daysUntil(data.lift.insurance?.validUntil);
+      liftInsPaidEl.textContent = data.lift.insurance?.paid
+        ? "Paid"
+        : "Not Paid";
+      liftInsValidEl.textContent = data.lift.insurance?.validUntil || "—";
+      liftInsDaysEl.textContent =
+        insDays === null
+          ? ""
+          : insDays < 0
+          ? `${Math.abs(insDays)} days overdue`
+          : `${insDays} days left`;
+      setStatusColor(rowIns, insDays);
+
+      const amcDays = daysUntil(data.lift.amc?.validUntil);
+      liftAmcPaidEl.textContent = data.lift.amc?.paid ? "Paid" : "Not Paid";
+      liftAmcValidEl.textContent = data.lift.amc?.validUntil || "—";
+      liftAmcDaysEl.textContent =
+        amcDays === null
+          ? ""
+          : amcDays < 0
+          ? `${Math.abs(amcDays)} days overdue`
+          : `${amcDays} days left`;
+      setStatusColor(rowAmc, amcDays);
     }
-  }
-  for (let i = monthRows.length - 1; i >= 0; i--) {
-    const av = monthRows[i][idx.amount];
-    if (av !== "" && av !== null) {
-      const n = typeof av === "number" ? av : toNum(av);
-      if (n > 0) {
-        amountThisMonth = n;
-        break;
+
+    /* OPL */
+    const opl = Array.isArray(data.opl) ? data.opl : [];
+    const openItems = opl.filter(
+      (x) => String(x.status || "").toLowerCase() !== "closed"
+    );
+    const closedItems = opl.filter(
+      (x) => String(x.status || "").toLowerCase() === "closed"
+    );
+    setText("opl-open-count", openItems.length);
+    setText("opl-closed-count", closedItems.length);
+
+    oplTableBody.innerHTML = "";
+    openItems.slice(0, 5).forEach((item) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${item.id ?? ""}</td>
+        <td>${item.title ?? item.issue ?? ""}</td>
+        <td class="warn">${item.status ?? ""}</td>
+        <td>${item.apartment ?? ""}</td>
+        <td>${item.remarks ?? ""}</td>
+      `;
+      oplTableBody.appendChild(tr);
+    });
+
+    oplMoreBtn.onclick = () => {
+      const rows = [...openItems, ...closedItems];
+      if (!rows.length) {
+        openModalHTML(
+          "OPL — Full List",
+          "<p class='small muted'>No items.</p>"
+        );
+        return;
       }
-    }
+      let html = `<div class="table-wrap"><table><thead><tr>
+      <th>ID</th><th>Title / Issue</th><th>Status</th><th>Apt</th><th>Remarks</th>
+      </tr></thead><tbody>`;
+      rows.forEach((item) => {
+        const st = String(item.status || "");
+        const cls = st.toLowerCase() === "closed" ? "ok" : "warn";
+        html += `<tr>
+          <td>${item.id ?? ""}</td>
+          <td>${item.title ?? item.issue ?? ""}</td>
+          <td class="${cls}">${st}</td>
+          <td>${item.apartment ?? ""}</td>
+          <td>${item.remarks ?? ""}</td>
+        </tr>`;
+      });
+      html += `</tbody></table></div>`;
+      openModalHTML("OPL — Full List", html);
+    };
+
+    /* Balance — write safely + format numbers */
+    console.log("Balance from API:", data.balance);
+    (function updateBalance(bal) {
+      const total = Number(bal?.totalBalance ?? 0);
+      const exp = Number(bal?.totalExpenses ?? 0);
+      const avail = Number(bal?.available ?? total - exp);
+      setText("bal-available", fmtINR(avail));
+      setText("bal-total-inline", fmtINR(total));
+      setText("bal-expenses-inline", fmtINR(exp));
+    })(data.balance || {});
+
+    hideLoader();
+  } catch (err) {
+    console.error("Dashboard fetch failed:", err);
+    showError("Could not load data. Please try again in a moment.");
+    hideLoader(); // show page so error bar is visible
   }
-
-  return { amountThisMonth, leavesThisMonth, paidThisMonth };
 }
 
-/* Lift details (lenient headers, accepts "Inusrance Until") */
-function readLiftDetails(month) {
-  const sh =
-    sheet("LiftDetails") ||
-    sheet("LiftInsurance") ||
-    sheet("Lift") ||
-    sheet("Insurance");
-  if (!sh)
-    return {
-      insurance: { paid: false, validUntil: "" },
-      amc: { paid: false, validUntil: "" },
-    };
-  if (sh.getLastRow() < 2)
-    return {
-      insurance: { paid: false, validUntil: "" },
-      amc: { paid: false, validUntil: "" },
-    };
-
-  const head = sh
-    .getRange(1, 1, 1, sh.getLastColumn())
-    .getDisplayValues()[0]
-    .map((h) =>
-      String(h || "")
-        .toLowerCase()
-        .trim()
-    );
-  const headNorm = head.map((h) => h.replace(/[^a-z]/g, ""));
-
-  const findCol = (fn) => {
-    for (let i = 0; i < head.length; i++) {
-      if (fn(head[i], headNorm[i])) return i;
-    }
-    return -1;
-  };
-  const mIdx = findCol((h) => /month/.test(h));
-  const insPaidIdx = findCol(
-    (h) =>
-      (h.includes("insur") || h.includes("inusr")) &&
-      (h.includes("paid") || h.includes("status"))
-  );
-  const insValidIdx = findCol(
-    (h, hn) =>
-      (h.includes("insur") || h.includes("inusr")) &&
-      (h.includes("valid") ||
-        h.includes("until") ||
-        h.includes("expiry") ||
-        hn.includes("inusranceuntil"))
-  );
-  const amcPaidIdx = findCol(
-    (h) => h.includes("amc") && (h.includes("paid") || h.includes("status"))
-  );
-  const amcValidIdx = findCol(
-    (h) =>
-      h.includes("amc") &&
-      (h.includes("valid") || h.includes("until") || h.includes("expiry"))
-  );
-
-  const rows = sh
-    .getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn())
-    .getDisplayValues();
-  let row = rows.find(
-    (r) => mIdx >= 0 && normalizeMonthCell(r[mIdx]) === month
-  );
-  if (!row) row = rows[rows.length - 1];
-
-  const fmt = (v) =>
-    v instanceof Date
-      ? Utilities.formatDate(v, TZ, "yyyy-MM-dd")
-      : String(v || "").trim();
-
-  return {
-    insurance: {
-      paid: toBool(insPaidIdx >= 0 ? row[insPaidIdx] : ""),
-      validUntil: fmt(insValidIdx >= 0 ? row[insValidIdx] : ""),
-    },
-    amc: {
-      paid: toBool(amcPaidIdx >= 0 ? row[amcPaidIdx] : ""),
-      validUntil: fmt(amcValidIdx >= 0 ? row[amcValidIdx] : ""),
-    },
-  };
-}
-
-/* OPL: ID | Title / Issue | Status | Apt | Remarks */
-function readOPL() {
-  const sh = sheet("OPL") || sheet("OpenPoints") || sheet("Open Point List");
-  if (!sh) return [];
-  if (sh.getLastRow() < 2) return [];
-  const head = sh
-    .getRange(1, 1, 1, sh.getLastColumn())
-    .getDisplayValues()[0]
-    .map((h) =>
-      String(h || "")
-        .toLowerCase()
-        .trim()
-    );
-  const rows = sh
-    .getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn())
-    .getDisplayValues();
-  const idIdx = head.findIndex((h) => /id|#/.test(h));
-  const titleIdx = head.findIndex((h) => /title|issue/.test(h));
-  const statusIdx = head.findIndex((h) => /status/.test(h));
-  const aptIdx = head.findIndex((h) => /apt|apartment|flat/.test(h));
-  const remarksIdx = head.findIndex((h) => /remark|note|comment/.test(h));
-  return rows.map((r) => ({
-    id: idIdx >= 0 ? r[idIdx] : "",
-    title: titleIdx >= 0 ? r[titleIdx] : "",
-    status: statusIdx >= 0 ? r[statusIdx] : "",
-    apartment: aptIdx >= 0 ? r[aptIdx] : "",
-    remarks: remarksIdx >= 0 ? r[remarksIdx] : "",
-  }));
-}
-
-/* Balance_Expenses: Date | Remarks | Expenses | Balance | Responsible */
-function readBalanceExpenses() {
-  const sh = sheet("Balance_Expenses");
-  if (!sh) return { totalBalance: 0, totalExpenses: 0, available: 0, list: [] };
-  if (sh.getLastRow() < 2)
-    return { totalBalance: 0, totalExpenses: 0, available: 0, list: [] };
-
-  const head = sh
-    .getRange(1, 1, 1, sh.getLastColumn())
-    .getDisplayValues()[0]
-    .map((h) =>
-      String(h || "")
-        .toLowerCase()
-        .trim()
-    );
-  const rows = sh
-    .getRange(2, 1, sh.getLastRow() - 1, sh.getLastColumn())
-    .getDisplayValues();
-
-  const dateIdx = head.findIndex((h) => /date/.test(h));
-  const remarksIdx = head.findIndex((h) => /remark|note|desc/.test(h));
-  const expIdx = head.findIndex((h) => /expense/.test(h));
-  const balIdx = head.findIndex((h) => /^balance$|^balance\s*/.test(h));
-  const respIdx = head.findIndex((h) => /responsible|owner|by/.test(h));
-
-  let totalBalance = 0,
-    totalExpenses = 0;
-  const list = rows.map((r) => {
-    const dateVal = dateIdx >= 0 ? r[dateIdx] : "";
-    const date =
-      dateVal instanceof Date
-        ? Utilities.formatDate(dateVal, TZ, "yyyy-MM-dd")
-        : String(dateVal || "");
-    const remarks = remarksIdx >= 0 ? r[remarksIdx] : "";
-    const expenses = toNum(expIdx >= 0 ? r[expIdx] : 0);
-    const balance = toNum(balIdx >= 0 ? r[balIdx] : 0);
-    const responsible = respIdx >= 0 ? r[respIdx] : "";
-    totalBalance += balance;
-    totalExpenses += expenses;
-    return { date, remarks, expenses, balance, responsible };
-  });
-
-  return {
-    totalBalance,
-    totalExpenses,
-    available: totalBalance - totalExpenses,
-    list,
-  };
-}
-
-/** ====== Debug helpers ====== */
-function paymentsDebug(month) {
-  const sh = sheet("Payments");
-  if (!sh) return { sheet: false };
-  const range = sh.getDataRange();
-  const values = range.getValues();
-  const display = range.getDisplayValues();
-
-  const headers = display[0];
-  const filtered = readPayments(month);
-
-  return {
-    version: VERSION,
-    month,
-    headers,
-    first3Typed: values.slice(1, 4),
-    first3Shown: display.slice(1, 4),
-    filtered,
-  };
-}
-
-function maidDebug(month) {
-  const sh = sheet("Maid");
-  const out = { version: VERSION, month, foundSheet: !!sh };
-  if (!sh) return out;
-
-  const values = sh.getDataRange().getValues();
-  out.rows = values.length - 1;
-  out.headers = (values.length ? values[0] : []).map(String);
-  const rows = values.slice(1);
-
-  const first = rows[0] || [];
-  out.firstRow = first.map((v) => ({ v, t: typeof v }));
-  out.filtered = readMaid(month);
-  return out;
-}
+loadDashboard();
