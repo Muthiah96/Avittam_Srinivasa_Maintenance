@@ -7,7 +7,6 @@ const APTS = ["F1", "F2", "F3", "S1", "S2", "T1", "T2", "T3"];
 document.getElementById("year").textContent = new Date().getFullYear();
 
 /* ---------- Helpers ---------- */
-// Safe text write + Indian number format
 const setText = (id, val) => {
   const el = document.getElementById(id);
   if (el) el.textContent = val;
@@ -38,24 +37,22 @@ function showError(msg) {
 
 /* Month labels */
 const dashMonthEl = document.getElementById("dash-month");
-const dashMonthEB = document.getElementById("dash-month-eb");
 const dashMonthMaid = document.getElementById("dash-month-maid");
 
 /* CAC pill */
 const cacText = document.getElementById("cac-text");
 
 /* Maintenance */
-const paidCountEl = document.getElementById("paid-count");
-const pendingCountEl = document.getElementById("pending-count");
-const tbodyMaint = document.getElementById("apt-table-maint");
 const btnPaid = document.getElementById("btn-paid");
 const btnPending = document.getElementById("btn-pending");
 
 /* EB */
 const ebAmountEl = document.getElementById("eb-amount");
-const ebAmountNoteEl = document.getElementById("eb-amount-note");
+const ebPeriodEl = document.getElementById("eb-period");
 const ebPaidEl = document.getElementById("eb-paid");
+const ebPayWindowEl = document.getElementById("eb-pay-window");
 const ebNextEl = document.getElementById("eb-next");
+const ebNextPayWindowEl = document.getElementById("eb-next-pay-window");
 
 /* Sweeper */
 const maidAmountEl = document.getElementById("maid-amount");
@@ -105,9 +102,9 @@ document.addEventListener("keydown", (e) => {
 function parseDateFlexible(s) {
   if (!s) return null;
   if (s instanceof Date) return s;
-  const t = String(s).trim(),
-    d1 = new Date(t);
-  if (!isNaN(d1)) return d1; // ✅ FIXED HERE (was isNaNaN)
+  const t = String(s).trim();
+  const d1 = new Date(t);
+  if (!isNaN(d1)) return d1;
 
   let m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
   if (m) {
@@ -121,7 +118,6 @@ function parseDateFlexible(s) {
   }
   return null;
 }
-
 function daysUntil(dateString) {
   const d = parseDateFlexible(dateString);
   if (!d) return null;
@@ -136,39 +132,12 @@ function setStatusColor(el, days) {
   else el.classList.add("ok");
 }
 
-/* EB window: 15.09.2025–22.09.2025, then +2 months; show next >= today */
-function ddmmyyyy(d) {
-  return `${String(d.getDate()).padStart(2, "0")}.${String(
-    d.getMonth() + 1
-  ).padStart(2, "0")}.${d.getFullYear()}`;
-}
-function addMonths(date, n) {
-  const d = new Date(date.getTime());
-  d.setMonth(d.getMonth() + n);
-  return d;
-}
-function nextEbWindow() {
-  const baseStart = new Date(2025, 8, 15); // Sep
-  const baseEnd = new Date(2025, 8, 22);
-  const today = new Date();
-  let i = 0,
-    s = baseStart,
-    e = baseEnd;
-  while (e < today && i < 100) {
-    i++;
-    s = addMonths(baseStart, i * 2);
-    e = addMonths(baseEnd, i * 2);
-  }
-  return `${ddmmyyyy(s)} ➜ ${ddmmyyyy(e)}`;
-}
-
-/* Common Area Controller schedule – JS side (same as Apps Script) */
+/* Common Area Controller schedule – JS side */
 function getControllerForDateJs(d) {
   const date = d instanceof Date ? d : new Date(d);
   const between = (dt, y1, m1, d1, y2, m2, d2) =>
     dt >= new Date(y1, m1, d1) && dt <= new Date(y2, m2, d2);
 
-  // months 0-based: 7 = Aug, 11 = Dec etc.
   if (between(date, 2025, 7, 1, 2025, 10, 30)) return "S1"; // Aug–Nov 2025
   if (between(date, 2025, 11, 1, 2026, 2, 31)) return "T1"; // Dec 25 – Mar 26
   if (between(date, 2026, 3, 1, 2026, 6, 31)) return "F2"; // Apr–Jul 26
@@ -199,7 +168,6 @@ async function loadDashboard() {
       year: "numeric",
     });
     setText("dash-month", monthLabel);
-    setText("dash-month-eb", monthLabel);
     setText("dash-month-maid", monthLabel);
 
     /* CAC pill – from fixed schedule */
@@ -240,58 +208,32 @@ async function loadDashboard() {
         }</ul>`
       );
 
-    if (tbodyMaint) {
-      tbodyMaint.innerHTML = "";
-      APTS.forEach((apt) => {
-        const row =
-          payments.find((p) => String(p.apartment).toUpperCase() === apt) || {};
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${apt}</td>
-          <td>${row.maintAmount ?? "-"}</td>
-          <td class="${row.maintPaid ? "ok" : "warn"}">${
-          row.maintPaid ? "Yes" : "No"
-        }</td>
-        `;
-        tbodyMaint.appendChild(tr);
-      });
-    }
-
-    /* EB – using previous-month data from backend */
+    /* EB – 2-month cycle from backend */
     const eb = data.eb || {};
-
-    // Show EB month as the EB sheet month (previous month), if provided
-    if (eb.ebMonth) {
-      const ebDate = new Date(eb.ebMonth + "-01");
-      const ebLabel = ebDate.toLocaleString(undefined, {
-        month: "long",
-        year: "numeric",
-      });
-      setText("dash-month-eb", ebLabel);
-    } else {
-      setText("dash-month-eb", monthLabel);
-    }
-
     if (typeof eb.amountCommon === "number") {
       setText("eb-amount", fmtINR(eb.amountCommon));
-      setText("eb-amount-note", eb.note ? eb.note : "");
-    } else if (eb.note) {
-      setText("eb-amount", "—");
-      setText("eb-amount-note", eb.note);
     } else {
       setText("eb-amount", "—");
-      setText("eb-amount-note", "");
     }
-
-    const allEbPaid = typeof eb.allPaid === "boolean" ? eb.allPaid : false;
-    setText("eb-paid", allEbPaid ? "Paid" : "Not Paid");
-    setText("eb-next", nextEbWindow());
+    setText("eb-period", `Period: ${eb.period || "—"}`);
+    setText("eb-paid", eb.allPaid ? "Paid" : "Not Paid");
+    setText(
+      "eb-pay-window",
+      eb.payWindow ? `Payment Window: ${eb.payWindow}` : "Payment Window: —"
+    );
+    setText("eb-next", eb.nextPeriod || "—");
+    setText(
+      "eb-next-pay-window",
+      eb.nextPayWindow
+        ? `Next Payment Window: ${eb.nextPayWindow}`
+        : "Next Payment Window: —"
+    );
 
     /* Sweeper */
     setText(
       "maid-amount",
       data.maid && typeof data.maid.amountThisMonth === "number"
-        ? data.maid.amountThisMonth
+        ? fmtINR(data.maid.amountThisMonth)
         : "—"
     );
     setText("maid-leaves", data.maid?.leavesThisMonth ?? "0");
@@ -375,8 +317,7 @@ async function loadDashboard() {
       openModalHTML("OPL — Full List", html);
     };
 
-    /* Balance — write safely + format numbers + note */
-    console.log("Balance from API:", data.balance);
+    /* Balance */
     (function updateBalance(bal) {
       const total = Number(bal?.totalBalance ?? 0);
       const exp = Number(bal?.totalExpenses ?? 0);
@@ -398,7 +339,7 @@ async function loadDashboard() {
   } catch (err) {
     console.error("Dashboard fetch failed:", err);
     showError("Could not load data. Please try again in a moment.");
-    hideLoader(); // show page so error bar is visible
+    hideLoader();
   }
 }
 

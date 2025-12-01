@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Avittam Srinivasa Apartment Portal</title>
 
-  <link rel="stylesheet" href="style.css?v=7" />
+  <link rel="stylesheet" href="style.css?v=8" />
   <meta name="theme-color" content="#f59e0b" />
 </head>
 <body>
@@ -64,23 +64,7 @@
                   <small>Click to view list</small>
                 </button>
               </div>
-
-              <!-- <details class="details">
-                <summary>Maintenance details (per flat)</summary>
-                <div class="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Apt</th>
-                        <th>Maintenance Amount</th>
-                        <th>Paid?</th>
-                      </tr>
-                    </thead>
-                    <tbody id="apt-table-maint"></tbody>
-                  </table>
-                </div>
-              </details>
-            </div> -->
+            </div>
 
             <!-- Sweeper -->
             <div class="stat-group">
@@ -112,16 +96,17 @@
                 <div class="stat-item">
                   <span>Amount (Common)</span>
                   <strong id="eb-amount">—</strong>
-                  <small id="eb-amount-note"></small>
+                  <small id="eb-period">Period: —</small>
                 </div>
                 <div class="stat-item">
                   <span>Status</span>
                   <strong id="eb-paid">—</strong>
-                  <small>Month: <span id="dash-month-eb"></span></small>
+                  <small id="eb-pay-window">Payment Window: —</small>
                 </div>
                 <div class="stat-item">
                   <span>Next EB Period</span>
                   <strong id="eb-next">—</strong>
+                  <small id="eb-next-pay-window">Next Payment Window: —</small>
                 </div>
               </div>
             </div>
@@ -235,7 +220,6 @@
   </div>
 
   <!-- JS -->
-  <script src="script.js?v=43"></script>
-
+  <script src="script.js?v=50"></script>
 </body>
 </html>
