@@ -107,11 +107,12 @@ function parseDateFlexible(s) {
   if (s instanceof Date) return s;
   const t = String(s).trim(),
     d1 = new Date(t);
-  if (!isNaN(d1)) return d1;
+  if (!isNaN(d1)) return d1; // ✅ FIXED HERE (was isNaNaN)
+
   let m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
   if (m) {
     const d = new Date(+m[3], +m[2] - 1, +m[1]);
-    if (!isNaNaN(d)) return d;
+    if (!isNaN(d)) return d;
   }
   m = t.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
   if (m) {
@@ -120,6 +121,7 @@ function parseDateFlexible(s) {
   }
   return null;
 }
+
 function daysUntil(dateString) {
   const d = parseDateFlexible(dateString);
   if (!d) return null;
