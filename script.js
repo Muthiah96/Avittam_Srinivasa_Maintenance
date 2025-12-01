@@ -111,7 +111,7 @@ function parseDateFlexible(s) {
   let m = t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
   if (m) {
     const d = new Date(+m[3], +m[2] - 1, +m[1]);
-    if (!isNaN(d)) return d;
+    if (!isNaNaN(d)) return d;
   }
   m = t.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
   if (m) {
@@ -160,11 +160,29 @@ function nextEbWindow() {
   return `${ddmmyyyy(s)} ➜ ${ddmmyyyy(e)}`;
 }
 
+/* Common Area Controller schedule – JS side (same as Apps Script) */
+function getControllerForDateJs(d) {
+  const date = d instanceof Date ? d : new Date(d);
+  const between = (dt, y1, m1, d1, y2, m2, d2) =>
+    dt >= new Date(y1, m1, d1) && dt <= new Date(y2, m2, d2);
+
+  // months 0-based: 7 = Aug, 11 = Dec etc.
+  if (between(date, 2025, 7, 1, 2025, 10, 30)) return "S1"; // Aug–Nov 2025
+  if (between(date, 2025, 11, 1, 2026, 2, 31)) return "T1"; // Dec 25 – Mar 26
+  if (between(date, 2026, 3, 1, 2026, 6, 31)) return "F2"; // Apr–Jul 26
+  if (between(date, 2026, 7, 1, 2026, 10, 30)) return "S2"; // Aug–Nov 26
+  if (between(date, 2026, 11, 1, 2027, 2, 31)) return "T2"; // Dec 26 – Mar 27
+  if (between(date, 2027, 3, 1, 2027, 6, 31)) return "F3"; // Apr–Jul 27
+  if (between(date, 2027, 7, 1, 2027, 10, 30)) return "T3"; // Aug–Nov 27
+
+  return "—";
+}
+
 /* ---------- Main load ---------- */
 async function loadDashboard() {
   showLoader();
 
-  const requested = new Date().toISOString().slice(0, 7);
+  const requested = new Date().toISOString().slice(0, 7); // "YYYY-MM"
   try {
     const res = await fetch(
       `${GAS_BASE_URL}?month=${requested}&_=${Date.now()}`,
@@ -182,23 +200,9 @@ async function loadDashboard() {
     setText("dash-month-eb", monthLabel);
     setText("dash-month-maid", monthLabel);
 
-    /* CAC pill (from OPL remarks/title) */
-    let cac = "—";
-    if (Array.isArray(data.opl)) {
-      for (let i = data.opl.length - 1; i >= 0; i--) {
-        const r = data.opl[i];
-        const t = String(r.title || "").toLowerCase();
-        const rem = String(r.remarks || "").toLowerCase();
-        if (
-          t.includes("common area controller") ||
-          rem.includes("common area controller")
-        ) {
-          cac = r.apartment || r.remarks || r.title;
-          break;
-        }
-      }
-    }
-    setText("cac-text", `Common Area Controller: ${cac}`);
+    /* CAC pill – from fixed schedule */
+    const cacFlat = getControllerForDateJs(new Date());
+    setText("cac-text", `Common Area Controller: ${cacFlat}`);
 
     /* Maintenance */
     const payments = Array.isArray(data.payments) ? data.payments : [];
@@ -251,11 +255,24 @@ async function loadDashboard() {
       });
     }
 
-    /* EB – using data.eb from backend */
+    /* EB – using previous-month data from backend */
     const eb = data.eb || {};
+
+    // Show EB month as the EB sheet month (previous month), if provided
+    if (eb.ebMonth) {
+      const ebDate = new Date(eb.ebMonth + "-01");
+      const ebLabel = ebDate.toLocaleString(undefined, {
+        month: "long",
+        year: "numeric",
+      });
+      setText("dash-month-eb", ebLabel);
+    } else {
+      setText("dash-month-eb", monthLabel);
+    }
+
     if (typeof eb.amountCommon === "number") {
-      setText("eb-amount", eb.amountCommon);
-      setText("eb-amount-note", eb.period ? `Period: ${eb.period}` : "");
+      setText("eb-amount", fmtINR(eb.amountCommon));
+      setText("eb-amount-note", eb.note ? eb.note : "");
     } else if (eb.note) {
       setText("eb-amount", "—");
       setText("eb-amount-note", eb.note);
@@ -266,7 +283,7 @@ async function loadDashboard() {
 
     const allEbPaid = typeof eb.allPaid === "boolean" ? eb.allPaid : false;
     setText("eb-paid", allEbPaid ? "Paid" : "Not Paid");
-    setText("eb-next", eb.period || nextEbWindow());
+    setText("eb-next", nextEbWindow());
 
     /* Sweeper */
     setText(
@@ -356,15 +373,23 @@ async function loadDashboard() {
       openModalHTML("OPL — Full List", html);
     };
 
-    /* Balance — write safely + format numbers */
+    /* Balance — write safely + format numbers + note */
     console.log("Balance from API:", data.balance);
     (function updateBalance(bal) {
       const total = Number(bal?.totalBalance ?? 0);
       const exp = Number(bal?.totalExpenses ?? 0);
       const avail = Number(bal?.available ?? total - exp);
+
       setText("bal-available", fmtINR(avail));
       setText("bal-total-inline", fmtINR(total));
       setText("bal-expenses-inline", fmtINR(exp));
+
+      const noteEl = document.getElementById("bal-note");
+      if (noteEl) {
+        noteEl.textContent =
+          bal?.note ||
+          "Click here to open sheet (only Common Area Controller will have edit access).";
+      }
     })(data.balance || {});
 
     hideLoader();
